@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Pantry Navigator Demo</title>
+    <style>
+        :root {
+            --primary-color: #007AFF;
+            --background-color: #F5F5F5;
+            --card-background: #FFFFFF;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --border-color: #EEEEEE;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+        }
+
+        .app-container {
+            width: 375px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 8px 24px var(--shadow-color);
+            overflow: hidden;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            height: 44px;
+            background: #1a1a1a;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 16px;
+        }
+
+        /* Navigation */
+        .navigation {
+            height: 44px;
+            background: white;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .navigation-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Content */
+        .content {
+            padding: 16px;
+        }
+
+        /* Search Bar */
+        .search-bar {
+            background: white;
+            border-radius: 8px;
+            padding: 8px 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .search-bar input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            color: var(--text-primary);
+        }
+
+        /* Category Filters */
+        .category-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .category-filter {
+            padding: 8px 16px;
+            background: var(--background-color);
+            border-radius: 16px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .category-filter.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* Resource Card */
+        .resource-card {
+            background: var(--card-background);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 4px var(--shadow-color);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .card-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .card-content {
+            margin-bottom: 12px;
+        }
+
+        .card-description {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .info-row {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .info-icon {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+        }
+
+        .card-footer {
+            border-top: 1px solid var(--border-color);
+            padding-top: 12px;
+        }
+
+        .category-tags {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Bottom Tab Bar */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid var(--border-color);
+            box-shadow: 0 -2px 8px var(--shadow-color);
+        }
+
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-secondary);
+        }
+
+        .tab-item.active {
+            color: var(--primary-color);
+        }
+
+        .tab-icon {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 4px;
+        }
+
+        .tab-label {
+            font-size: 10px;
+        }
+
+        /* Map Screen */
+        .map-container {
+            height: 400px;
+            background: #E5E5EA;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .map-marker {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        /* Resource Info */
+        .resource-info {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px var(--shadow-color);
+        }
+
+        .directions-button {
+            background: var(--primary-color);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            margin-top: 16px;
+        }
+
+        /* Offline Mode */
+        .offline-badge {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            background: #FF3B30;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        /* Voice Commands */
+        .voice-command {
+            position: fixed;
+            bottom: 100px;
+            right: 16px;
+            width: 56px;
+            height: 56px;
+            background: var(--primary-color);
+            border-radius: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 8px var(--shadow-color);
+        }
+
+        /* Favorites */
+        .favorite-button {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px var(--shadow-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-bar-content">
+                <span>9:41 AM</span>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="navigation">
+            <div class="navigation-title">Food Pantry Navigator</div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Search Bar -->
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search resources..." />
+            </div>
+
+            <!-- Category Filters -->
+            <div class="category-filters">
+                <div class="category-filter active">Food Pantry</div>
+                <div class="category-filter">Housing</div>
+                <div class="category-filter">Health</div>
+                <div class="category-filter">Transportation</div>
+                <div class="category-filter">Education</div>
+            </div>
+
+            <!-- Resource Card -->
+            <div class="resource-card">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-utensils"></i>
+                    </div>
+                    <h3 class="card-title">Community Food Pantry</h3>
+                </div>
+                
+                <div class="card-content">
+                    <p class="card-description">Provides fresh produce, dairy, and pantry items to those in need.</p>
+                    
+                    <div class="info-row">
+                        <i class="fas fa-map-marker-alt info-icon"></i>
+                        <span>123 Main St, Grand Rapids, MI</span>
+                    </div>
+                    
+                    <div class="info-row">
+                        <i class="fas fa-clock info-icon"></i>
+                        <span>Mon-Fri: 9:00 AM - 4:00 PM</span>
+                    </div>
+                </div>
+                
+                <div class="card-footer">
+                    <div class="category-tags">
+                        Food Pantry • Emergency Food • SNAP Assistance
+                    </div>
+                </div>
+            </div>
+
+            <!-- Map Container -->
+            <div class="map-container">
+                <!-- Map would be here in the actual app -->
+                <div class="map-marker" style="top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
+            </div>
+
+            <!-- Resource Info -->
+            <div class="resource-info">
+                <h3>Community Food Pantry</h3>
+                <p>123 Main St, Grand Rapids, MI</p>
+                <button class="directions-button">Get Directions</button>
+            </div>
+        </div>
+
+        <!-- Bottom Tab Bar -->
+        <div class="tab-bar">
+            <div class="tab-item active">
+                <i class="fas fa-home tab-icon"></i>
+                <span class="tab-label">Home</span>
+            </div>
+            <div class="tab-item">
+                <i class="fas fa-map-marker-alt tab-icon"></i>
+                <span class="tab-label">Map</span>
+            </div>
+            <div class="tab-item">
+                <i class="fas fa-list tab-icon"></i>
+                <span class="tab-label">Resources</span>
+            </div>
+            <div class="tab-item">
+                <i class="fas fa-user tab-icon"></i>
+                <span class="tab-label">Profile</span>
+            </div>
+        </div>
+
+        <!-- Offline Badge -->
+        <div class="offline-badge">
+            <i class="fas fa-wifi-slash"></i> Offline Mode
+        </div>
+
+        <!-- Voice Command -->
+        <div class="voice-command">
+            <i class="fas fa-microphone"></i>
+        </div>
+    </div>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</body>
+</html>
