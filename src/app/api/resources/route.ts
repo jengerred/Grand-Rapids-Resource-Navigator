@@ -1,0 +1,133 @@
+import { NextResponse } from 'next/server';
+import { initMongoDB, clientPromise, getMongoClient } from '@/lib/mongodb';
+import { Resource, CreateResourceDTO, UpdateResourceDTO } from '@/types/resource';
+import { ObjectId, WithId, Document, UpdateResult, InsertOneResult } from 'mongodb';
+import { offlineResources } from '@/data/offlineData';
+
+// Type for MongoDB document with _id
+interface MongoResource extends Resource {
+  _id: ObjectId;
+}
+
+// Type for MongoDB document without _id
+interface ResourceWithoutId extends Resource {
+  id: string;
+}
+
+type ResourceWithId = MongoResource | ResourceWithoutId;
+
+function convertMongoResourceToResource(resource: ResourceWithId): Resource {
+  const id = 'id' in resource ? resource.id : (resource as MongoResource)._id.toString();
+  return {
+    ...resource,
+    id,
+    geocodedCoordinates: {
+      lat: resource.geocodedCoordinates?.lat || 0,
+      lng: resource.geocodedCoordinates?.lng || 0
+    }
+  };
+}
+
+function convertResourceToMongoResource(resource: Resource): Omit<Resource, 'id'> {
+  const { id, ...mongoData } = resource;
+  return mongoData;
+}
+
+// Type for MongoDB update result with resource value
+type UpdateResultWithResource = UpdateResult & { value: MongoResource | null };
+
+export async function GET() {
+  try {
+    // Initialize MongoDB connection
+    const clientPromise = await initMongoDB();
+    const client = await getMongoClient();
+    const db = client.db('grand-rapids-resources');
+    const mongoResources = await db.collection('resources').find({}).toArray();
+    console.log('Mongo resources found:', mongoResources.length);
+    
+    if (mongoResources.length > 0) {
+      const resources = mongoResources.map((resource: any) => convertMongoResourceToResource(resource));
+      console.log('Converted resources:', resources.length);
+      return NextResponse.json(resources);
+    } else {
+      // If no resources found in MongoDB, use offline data
+      console.log('No resources found in MongoDB, using offline data');
+      const resources = offlineResources.map((resource: any) => convertMongoResourceToResource(resource));
+      return NextResponse.json(resources);
+    }
+  } catch (error) {
+    // If MongoDB connection fails, use offline data
+    console.error('Error fetching resources:', error);
+    console.log('Using offline data as fallback');
+    const resources = offlineResources.map((resource: any) => convertMongoResourceToResource(resource));
+    return NextResponse.json(resources);
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const data = await request.json();
+    const mongoData = convertResourceToMongoResource(data);
+    const client = await clientPromise;
+    const db = client.db('grand-rapids-resources');
+    const result = await db.collection('resources').insertOne(mongoData);
+    const resource = {
+      ...data,
+      id: result.insertedId.toString()
+    };
+    return NextResponse.json(resource);
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to create resource' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const { id, ...data }: { id: string } & UpdateResourceDTO = await request.json();
+    const client = await clientPromise;
+    const db = client.db('grand-rapids-resources');
+    const result = await db.collection('resources').findOneAndUpdate(
+      { _id: new ObjectId(id) },
+      { $set: data },
+      { returnDocument: 'after' }
+    );
+    if (!result || !result.value) {
+      return NextResponse.json(
+        { error: 'Resource not found' },
+        { status: 404 }
+      );
+    }
+    const resource = convertMongoResourceToResource(result.value);
+    return NextResponse.json(resource);
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to update resource' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Resource ID is required' },
+        { status: 400 }
+      );
+    }
+    const client = await clientPromise;
+    const db = client.db('grand-rapids-resources');
+    const result = await db.collection<MongoResource>('resources').deleteOne({ _id: new ObjectId(id) });
+    return NextResponse.json({ success: result.deletedCount > 0 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to delete resource' },
+      { status: 500 }
+    );
+  }
+}
