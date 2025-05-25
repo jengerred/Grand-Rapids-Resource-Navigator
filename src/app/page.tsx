@@ -11,8 +11,13 @@ export default function Home() {
   useEffect(() => {
     const fetchResources = async () => {
       try {
+        console.log('Fetching resources...');
         const response = await fetch('/api/resources');
+        if (!response.ok) {
+          throw new Error('Failed to fetch resources');
+        }
         const data = await response.json();
+        console.log('Received resources:', data);
         setResources(data);
       } catch (error) {
         console.error('Error fetching resources:', error);
@@ -24,15 +29,7 @@ export default function Home() {
     fetchResources();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold mb-4">Loading Resources...</h1>
-        </div>
-      </div>
-    );
-  }
+  // Always render the map, even if loading
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -45,7 +42,7 @@ export default function Home() {
 
           <div className="relative flex-1">
             <div className="w-full h-[80vh] rounded-lg shadow-lg">
-              <GrandRapidsMap className="w-full h-full" resources={resources} />
+              <GrandRapidsMap className="w-full h-[80vh]" resources={resources} />
             </div>
           </div>
         </div>

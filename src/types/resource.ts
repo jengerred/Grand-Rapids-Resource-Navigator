@@ -1,18 +1,18 @@
 export interface Resource {
   id: string;
   name: string;
-  address: string;
-  city: string;
-  state: string;
-  zip: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
   category: string;
   services: string[];
   hours?: string;
   phone?: string;
   website?: string;
   geocodedCoordinates: {
-    lat: number;
-    lng: number;
+    lat: number | null;
+    lng: number | null;
   };
   location?: string;
   createdAt?: Date;

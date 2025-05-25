@@ -10,6 +10,16 @@ import { Resource } from '@/types/resource';
 import { LeafletConfig } from './LeafletConfig';
 import * as leaflet from 'leaflet';
 
+// Create a reusable blue marker icon
+const blueMarkerIcon = new leaflet.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  shadowSize: [41, 41]
+});
+
 
 const PULSING_ANIMATION = `
 @keyframes pulse {
@@ -108,28 +118,18 @@ function LocationHandler({ mapCenter, setMapCenter, setZoom }: LocationHandlerPr
 
 export default function GrandRapidsMap({ className = '', resources = [] }: GrandRapidsMapProps) {
   
-  // Move Leaflet icon configuration into useEffect to prevent SSR issues
-useEffect(() => {
-  if (typeof window !== 'undefined') {
-    const icon = new leaflet.Icon.Default();
-    delete (icon as any)._getIconUrl;
-    leaflet.Icon.Default.mergeOptions({
-      iconRetinaUrl: '/marker-icon-2x.png',
-      iconUrl: '/marker-icon.png',
-      shadowUrl: '/marker-shadow.png',
-    });
-  }
-}, []);
-
-  
-  // Ensure resources is an array
-  const resourcesArray = Array.isArray(resources) ? resources : [];
+  // Initialize resources state
+  const [resourcesState, setResourcesState] = useState<Resource[]>(resources);
   
   const [mapCenter, setMapCenter] = useState<Coordinates | null>(null);
   const [zoom, setZoom] = useState(13);
   const [hasLocationPermission, setHasLocationPermission] = useState(false);
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
-  const [resourcesState, setResourcesState] = useState<Resource[]>(resourcesArray);
+
+  // Update resources state when props change
+  useEffect(() => {
+    setResourcesState(resources);
+  }, [resources]);
 
   // Configure Leaflet icons to prevent SSR issues
   useEffect(() => {
@@ -211,22 +211,33 @@ useEffect(() => {
             />
           )}
           {resourcesState
-            .filter((resource) => resource.geocodedCoordinates?.lat !== undefined && resource.geocodedCoordinates?.lng !== undefined)
-            .map((resource) => (
-              <Marker
-                key={resource.id}
-                position={[resource.geocodedCoordinates.lat, resource.geocodedCoordinates.lng]}
-              >
-                <Popup>
-                  <div className="p-2">
-                    <h3 className="font-bold">{resource.name}</h3>
-                    <p className="text-sm">{resource.address}</p>
-                    {resource.phone && <p className="text-sm">{resource.phone}</p>}
-                    {resource.hours && <p className="text-sm">{resource.hours}</p>}
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
+            .filter((resource) => {
+              console.log('Processing resource:', resource.name, 'with coordinates:', resource.geocodedCoordinates);
+              return resource.geocodedCoordinates && 
+                resource.geocodedCoordinates.lat !== null && 
+                resource.geocodedCoordinates.lng !== null;
+            })
+            .map((resource) => {
+              console.log('Creating marker for:', resource.name, 'at:', resource.geocodedCoordinates);
+              return (
+                <Marker
+                  key={resource.id}
+                  position={[
+                    resource.geocodedCoordinates.lat,
+                    resource.geocodedCoordinates.lng
+                  ] as [number, number]}
+                  icon={blueMarkerIcon}
+                >
+                  <Popup>
+                    <div className="p-2">
+                      <h3 className="font-bold">{resource.name}</h3>
+                      <p className="text-sm">{resource.address}</p>
+                      {resource.phone && <p className="text-sm">{resource.phone}</p>}
+                      {resource.hours && <p className="text-sm">{resource.hours}</p>}
+                    </div>
+                  </Popup>
+                </Marker>
+              )})}
         </MapContainer>
       </div>
       <style>{PULSING_ANIMATION}</style>

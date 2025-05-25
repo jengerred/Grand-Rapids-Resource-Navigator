@@ -7,6 +7,22 @@ const COLLECTION_NAME = 'resources';
 export const offlineResources = [
   {
     id: new ObjectId().toString(),
+    name: "Access of West Michigan",
+    category: "Food Pantry",
+    services: ["Food Distribution", "Grocery", "Fresh Produce"],
+    hours: "9 AM - 4 PM Mon-Fri",
+    phone: "(616) 774-2175",
+    website: "https://accessofwestmichigan.org",
+    geocodedCoordinates: {
+      lat: null,
+      lng: null
+    },
+    location: "Location not provided (privacy preference)",
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    id: new ObjectId().toString(),
     name: "Matthews House Ministry",
     address: "766 7th St NW",
     city: "Grand Rapids",
