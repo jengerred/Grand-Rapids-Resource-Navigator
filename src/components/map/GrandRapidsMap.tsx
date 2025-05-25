@@ -117,12 +117,71 @@ export default function GrandRapidsMap({ className = '', resources = [] }: Grand
                     key={resource.id}
                     position={[coords.lat as number, coords.lng as number]}
                   >
-                    <Popup>
+                    <Popup className="max-w-sm bg-white rounded-lg p-3">
                       <div className="text-center">
-                        <h3 className="font-bold">{resource.name}</h3>
-                        <p className="text-sm">{resource.address}</p>
-                        {resource.phone && <p className="text-sm">{resource.phone}</p>}
+                        <h3 className="text-xl font-bold text-gray-900 mb-0">{resource.name}</h3>
+                        <p className="mt-0.5 text-base text-gray-600">
+                          <span className="font-medium">{resource.address}</span><br />
+                          {`${resource.city}, ${resource.state} ${resource.zip}`}
+                        </p>
                       </div>
+                      
+                      <div className="space-y-3">
+                        {resource.services && (
+                          <div className="pb-4">
+                            <h4 className="text-sm text-gray-600 mb-1">Services:</h4>
+                            <div className="flex flex-wrap gap-1">
+                              {resource.services.map((service, index) => (
+                                <span 
+                                  key={index} 
+                                  className="px-2 py-1 bg-gray-100 rounded-full text-sm text-gray-700 flex items-center gap-0.5"
+                                >
+                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" style={{ color: 'gray' }}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                  </svg>
+                                  {service}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {resource.hours && (
+                          <div className="mt-4 flex items-start gap-2">
+                            <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <div className="flex flex-col">
+                              <span className="text-gray-600">Hours:</span>
+                              <p className="text-gray-700 whitespace-pre-wrap">{resource.hours}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {resource.phone && (
+                        <div className="mt-2 flex items-start gap-2">
+                          <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                          </svg>
+                          <div className="flex flex-col">
+                            <span className="text-gray-600">Phone:</span>
+                            <p className="text-gray-700">{resource.phone}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {resource.website && (
+                        <div className="mt-2 flex items-center gap-2">
+                          <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                          </svg>
+                          <span className="text-gray-600">Website:</span>
+                          <a href={resource.website} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">
+                            {resource.website}
+                          </a>
+                        </div>
+                      )}
                     </Popup>
                   </Marker>
                 );
