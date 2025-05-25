@@ -68,8 +68,11 @@ export async function POST(request: Request) {
   try {
     const data = await request.json();
     const mongoData = convertResourceToMongoResource(data);
-    const client = await clientPromise;
-    const db = client.db('grand-rapids-resources');
+    const client = await getMongoClient();
+    if (!client) {
+      throw new Error('MongoDB client is not initialized');
+    }
+    const db = client.db();
     const result = await db.collection('resources').insertOne(mongoData);
     const resource = {
       ...data,
@@ -77,8 +80,9 @@ export async function POST(request: Request) {
     };
     return NextResponse.json(resource);
   } catch (error) {
+    console.error('Error creating resource:', error);
     return NextResponse.json(
-      { error: 'Failed to create resource' },
+      { error: 'Failed to create resource', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
@@ -87,8 +91,11 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const { id, ...data }: { id: string } & UpdateResourceDTO = await request.json();
-    const client = await clientPromise;
-    const db = client.db('grand-rapids-resources');
+    const client = await getMongoClient();
+    if (!client) {
+      throw new Error('MongoDB client is not initialized');
+    }
+    const db = client.db();
     const result = await db.collection('resources').findOneAndUpdate(
       { _id: new ObjectId(id) },
       { $set: data },
@@ -103,8 +110,9 @@ export async function PUT(request: Request) {
     const resource = convertMongoResourceToResource(result.value);
     return NextResponse.json(resource);
   } catch (error) {
+    console.error('Error updating resource:', error);
     return NextResponse.json(
-      { error: 'Failed to update resource' },
+      { error: 'Failed to update resource', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
@@ -120,13 +128,17 @@ export async function DELETE(request: Request) {
         { status: 400 }
       );
     }
-    const client = await clientPromise;
-    const db = client.db('grand-rapids-resources');
+    const client = await getMongoClient();
+    if (!client) {
+      throw new Error('MongoDB client is not initialized');
+    }
+    const db = client.db();
     const result = await db.collection<MongoResource>('resources').deleteOne({ _id: new ObjectId(id) });
     return NextResponse.json({ success: result.deletedCount > 0 });
   } catch (error) {
+    console.error('Error deleting resource:', error);
     return NextResponse.json(
-      { error: 'Failed to delete resource' },
+      { error: 'Failed to delete resource', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
