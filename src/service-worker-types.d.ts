@@ -2,7 +2,7 @@
 
 // Define service worker events
 interface ExtendableEvent extends Event {
-  waitUntil(promise: Promise<any>): void;
+  waitUntil(promise: Promise<void>): void;
 }
 
 interface FetchEvent extends ExtendableEvent {
@@ -35,12 +35,12 @@ interface ServiceWorkerGlobalScopeEventMap {
 // Define ServiceWorkerGlobalScope
 interface ServiceWorkerGlobalScope extends WorkerGlobalScope {
   caches: CacheStorage;
-  oninstall: ((this: ServiceWorkerGlobalScope, ev: ExtendableEvent) => any) | null;
-  onfetch: ((this: ServiceWorkerGlobalScope, ev: FetchEvent) => any) | null;
-  onactivate: ((this: ServiceWorkerGlobalScope, ev: ExtendableEvent) => any) | null;
+  oninstall: ((this: ServiceWorkerGlobalScope, ev: ExtendableEvent) => void) | null;
+  onfetch: ((this: ServiceWorkerGlobalScope, ev: FetchEvent) => void) | null;
+  onactivate: ((this: ServiceWorkerGlobalScope, ev: ExtendableEvent) => void) | null;
   addEventListener<K extends keyof ServiceWorkerGlobalScopeEventMap>(
     type: K,
-    listener: (this: ServiceWorkerGlobalScope, ev: ServiceWorkerGlobalScopeEventMap[K]) => any,
+    listener: (this: ServiceWorkerGlobalScope, ev: ServiceWorkerGlobalScopeEventMap[K]) => void,
     options?: boolean | AddEventListenerOptions
   ): void;
 }

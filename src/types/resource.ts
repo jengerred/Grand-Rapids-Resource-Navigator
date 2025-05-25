@@ -7,13 +7,16 @@ export interface Resource {
   zip: string;
   category: string;
   services: string[];
-  hours: string;
-  phone: string;
-  website: string;
+  hours?: string;
+  phone?: string;
+  website?: string;
   geocodedCoordinates: {
     lat: number;
     lng: number;
   };
+  location?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface CreateResourceDTO {
@@ -31,6 +34,7 @@ export interface CreateResourceDTO {
     lat: number;
     lng: number;
   };
+  location?: string;
 }
 
 export interface UpdateResourceDTO {

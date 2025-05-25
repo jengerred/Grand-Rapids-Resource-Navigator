@@ -1,13 +1,6 @@
-"use client";
-
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { metadata } from './metadata';
 import { RegisterServiceWorker } from './register-service-worker';
-import { initMongoDB } from '@/lib/mongodb';
-
-// Initialize MongoDB connection
-initMongoDB();
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
