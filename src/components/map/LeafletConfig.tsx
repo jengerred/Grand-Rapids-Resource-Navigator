@@ -1,10 +1,21 @@
 'use client';
 
+import { useEffect } from 'react';
+
 export function LeafletConfig() {
-  // Configure Leaflet icons to use default icons
-  const leaflet = require('leaflet');
-  const icon = new leaflet.Icon.Default();
-  delete (icon as any)._getIconUrl;
+  // Wait for Leaflet to be loaded
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      import('leaflet').then((leaflet) => {
+        // Configure Leaflet icons
+        leaflet.default.Icon.Default.mergeOptions({
+          iconRetinaUrl: '/leaflet/marker-icon-2x.png',
+          iconUrl: '/leaflet/marker-icon.png',
+          shadowUrl: '/leaflet/marker-shadow.png'
+        });
+      });
+    }
+  }, []);
 
   return null;
 }

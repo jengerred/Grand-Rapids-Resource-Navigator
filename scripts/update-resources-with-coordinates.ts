@@ -10,7 +10,7 @@ async function updateResourcesWithCoordinates() {
   const client = new MongoClient(MONGODB_URI);
   try {
     await client.connect();
-    const db = client.db('grand-rapids-resources');
+    const db = client.db();
     const resources = await db.collection('resources').find().toArray();
 
     console.log(`Found ${resources.length} resources to update`);

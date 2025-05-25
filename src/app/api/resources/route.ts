@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { initMongoDB, clientPromise, getMongoClient } from '@/lib/mongodb';
-import { Resource, CreateResourceDTO, UpdateResourceDTO } from '@/types/resource';
-import { ObjectId, WithId, Document, UpdateResult, InsertOneResult } from 'mongodb';
+import { initMongoDB, getMongoClient } from '@/lib/mongodb';
+import { Resource, UpdateResourceDTO } from '@/types/resource';
+import { ObjectId, Document } from 'mongodb';
 import { offlineResources } from '@/data/offlineData';
 
 // Type for MongoDB document with _id
@@ -9,58 +9,56 @@ interface MongoResource extends Resource {
   _id: ObjectId;
 }
 
-// Type for MongoDB document without _id
-interface ResourceWithoutId extends Resource {
-  id: string;
-}
-
-type ResourceWithId = MongoResource | ResourceWithoutId;
-
-function convertMongoResourceToResource(resource: ResourceWithId): Resource {
-  const id = 'id' in resource ? resource.id : (resource as MongoResource)._id.toString();
+function convertMongoResourceToResource(resource: Document): Resource {
   return {
-    ...resource,
-    id,
+    id: resource._id.toString(),
+    name: resource.name as string,
+    category: resource.category as string,
+    services: resource.services as string[],
+    hours: resource.hours as string,
+    phone: resource.phone as string,
+    website: resource.website as string,
     geocodedCoordinates: {
-      lat: resource.geocodedCoordinates?.lat || 0,
-      lng: resource.geocodedCoordinates?.lng || 0
-    }
+      lat: (resource.geocodedCoordinates?.lat as number) || 0,
+      lng: (resource.geocodedCoordinates?.lng as number) || 0
+    },
+    location: resource.location as string,
+    createdAt: resource.createdAt as Date,
+    updatedAt: resource.updatedAt as Date
   };
 }
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
 function convertResourceToMongoResource(resource: Resource): Omit<Resource, 'id'> {
-  const { id, ...mongoData } = resource;
+  const { id: _, ...mongoData } = resource;
   return mongoData;
 }
-
-// Type for MongoDB update result with resource value
-type UpdateResultWithResource = UpdateResult & { value: MongoResource | null };
+/* eslint-enable @typescript-eslint/no-unused-vars */
 
 export async function GET() {
   try {
     // Initialize MongoDB connection
-    const clientPromise = await initMongoDB();
+    await initMongoDB();
     const client = await getMongoClient();
-    const db = client.db('grand-rapids-resources');
+    const db = client.db();
     const mongoResources = await db.collection('resources').find({}).toArray();
     console.log('Mongo resources found:', mongoResources.length);
     
     if (mongoResources.length > 0) {
-      const resources = mongoResources.map((resource: any) => convertMongoResourceToResource(resource));
+      // Convert MongoDB resources to API format
+      const resources = mongoResources.map((resource: Document) => convertMongoResourceToResource(resource));
       console.log('Converted resources:', resources.length);
       return NextResponse.json(resources);
     } else {
       // If no resources found in MongoDB, use offline data
       console.log('No resources found in MongoDB, using offline data');
-      const resources = offlineResources.map((resource: any) => convertMongoResourceToResource(resource));
-      return NextResponse.json(resources);
+      return NextResponse.json(offlineResources);
     }
   } catch (error) {
     // If MongoDB connection fails, use offline data
     console.error('Error fetching resources:', error);
     console.log('Using offline data as fallback');
-    const resources = offlineResources.map((resource: any) => convertMongoResourceToResource(resource));
-    return NextResponse.json(resources);
+    return NextResponse.json(offlineResources);
   }
 }
 
@@ -74,10 +72,10 @@ export async function POST(request: Request) {
     }
     const db = client.db();
     const result = await db.collection('resources').insertOne(mongoData);
-    const resource = {
+    const resource = convertMongoResourceToResource({
       ...data,
-      id: result.insertedId.toString()
-    };
+      _id: result.insertedId
+    });
     return NextResponse.json(resource);
   } catch (error) {
     console.error('Error creating resource:', error);

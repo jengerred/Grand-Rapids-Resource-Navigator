@@ -6,11 +6,26 @@
   cursor: pointer;
 }
 
+/* Pulsing animation */
+@keyframes pulse {
+  0% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0.85;
+  }
+}
+
 .location-marker {
   position: relative;
   border-radius: 50%;
   background: #007AFF;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  animation: pulse 2s infinite;
+  animation-timing-function: ease-in-out;
 }
 
 .location-marker-wide {
@@ -19,4 +34,17 @@
 
 .location-marker-narrow {
   border: 2px solid white;
+}
+
+/* Map container dimensions */
+.map-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  min-height: 500px;
+}
+
+/* Fix z-index issues */
+.leaflet-container {
+  z-index: 0 !important;
 }

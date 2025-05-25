@@ -1,26 +1,10 @@
 import { MongoClient, ObjectId } from 'mongodb';
 
 const MONGODB_URI = 'mongodb+srv://jengerred:qqDwlofCP7GoFZEH@cluster0.xkeshgw.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
-const DATABASE_NAME = 'grand-rapids-resources';
+const DATABASE_NAME = 'resource-navigator';
 const COLLECTION_NAME = 'resources';
 
 export const offlineResources = [
-  {
-    id: new ObjectId().toString(),
-    name: "Access of West Michigan",
-    category: "Food Pantry",
-    services: ["Food Distribution", "Grocery", "Fresh Produce"],
-    hours: "9 AM - 4 PM Mon-Fri",
-    phone: "(616) 774-2175",
-    website: "https://accessofwestmichigan.org",
-    geocodedCoordinates: {
-      lat: null,
-      lng: null
-    },
-    location: "Location not provided (privacy preference)",
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
   {
     id: new ObjectId().toString(),
     name: "Matthews House Ministry",
