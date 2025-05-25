@@ -19,7 +19,7 @@ export function LocationPermissionPrompt({
   }
 
   return (
-    <div className="fixed bottom-4 left-4 z-[9999] bg-white p-4 rounded-lg shadow-lg border border-gray-300">
+    <div className="fixed top-4 left-4 z-[9999] bg-white p-4 rounded-lg shadow-lg border border-gray-300">
       <div className="flex items-center gap-4">
         <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
           <LocateIcon className="w-4 h-4 text-white" />
