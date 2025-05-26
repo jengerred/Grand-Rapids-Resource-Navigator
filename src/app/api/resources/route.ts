@@ -13,6 +13,10 @@ function convertMongoResourceToResource(resource: Document): Resource {
   return {
     id: resource._id.toString(),
     name: resource.name as string,
+    address: resource.address as string,
+    city: resource.city as string,
+    state: resource.state as string,
+    zip: resource.zip as string,
     category: resource.category as string,
     services: resource.services as string[],
     hours: resource.hours as string,
@@ -44,11 +48,35 @@ export async function GET() {
     const mongoResources = await db.collection('resources').find({}).toArray();
     console.log('Mongo resources found:', mongoResources.length);
     
-    if (mongoResources.length > 0) {
-      // Convert MongoDB resources to API format
-      const resources = mongoResources.map((resource: Document) => convertMongoResourceToResource(resource));
-      console.log('Converted resources:', resources.length);
-      return NextResponse.json(resources);
+    // Validate and convert resources
+    const validResources = mongoResources
+      .filter((resource: Document) => {
+        // Required fields
+        const requiredFields = ['name', 'address', 'city', 'state', 'zip', 'category', 'services'];
+        
+        // Check if all required fields exist and are not empty
+        for (const field of requiredFields) {
+          if (!resource[field] || (typeof resource[field] === 'string' && !resource[field].trim())) {
+            console.error(`Missing required field: ${field}`);
+            return false;
+          }
+        }
+        
+        // Validate geocodedCoordinates
+        if (!resource.geocodedCoordinates || 
+            typeof resource.geocodedCoordinates.lat !== 'number' || 
+            typeof resource.geocodedCoordinates.lng !== 'number') {
+          console.error('Invalid geocodedCoordinates');
+          return false;
+        }
+        
+        return true;
+      })
+      .map((resource: Document) => convertMongoResourceToResource(resource));
+    
+    if (validResources.length > 0) {
+      console.log('Valid resources found:', validResources.length);
+      return NextResponse.json(validResources);
     } else {
       // If no resources found in MongoDB, use offline data
       console.log('No resources found in MongoDB, using offline data');
