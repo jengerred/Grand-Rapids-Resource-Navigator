@@ -39,7 +39,7 @@ export default function Home() {
 
           <div className="relative flex-1">
             <div className="w-full h-[80vh] rounded-lg shadow-lg">
-              <GrandRapidsMap className="w-full h-[80vh]" resources={resources} />
+              <GrandRapidsMap className="w-full h-full" resources={resources} />
             </div>
           </div>
         </div>

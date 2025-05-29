@@ -11,8 +11,8 @@ export interface Resource {
   phone?: string;
   website?: string;
   geocodedCoordinates: {
-    lat: number | null;
-    lng: number | null;
+    lat: number;
+    lng: number;
   };
   location?: string;
   createdAt?: Date;

@@ -15,6 +15,7 @@ import { ClientOnly } from './ClientOnly';
 import 'leaflet/dist/leaflet.css';
 import './styles.css';
 import { Resource } from '@/types/resource';
+import RoutingControls from '@/lib/routing/RoutingControls';
 import { LeafletConfig } from './LeafletConfig';
 
 interface Coordinates {
@@ -36,17 +37,27 @@ interface GrandRapidsMapProps {
 export default function GrandRapidsMap({ className = '', resources = [] }: GrandRapidsMapProps) {
   // Initialize resources state (must be called unconditionally)
   const [resourcesState, setResourcesState] = useState<Resource[]>(resources);
-  const [mapCenter, setMapCenter] = useState<Coordinates>({
-    lat: 42.9634,
-    lng: -85.6681
-  });
+  const [mapCenter, setMapCenter] = useState<Coordinates | null>(null);
+  const [showRouting, setShowRouting] = useState(false);
+  const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
   const [hasLocationPermission, setHasLocationPermission] = useState(false);
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
 
-  // Update resources state when props change
   useEffect(() => {
     setResourcesState(resources);
   }, [resources]);
+
+  useEffect(() => {
+    console.log('showRouting changed:', showRouting);
+  }, [showRouting]);
+
+  useEffect(() => {
+    console.log('selectedResource changed:', selectedResource?.name);
+  }, [selectedResource]);
+
+  useEffect(() => {
+    console.log('userLocation changed:', userLocation);
+  }, [userLocation]);
 
   useEffect(() => {
     if (hasLocationPermission) {
@@ -84,9 +95,6 @@ export default function GrandRapidsMap({ className = '', resources = [] }: Grand
             zoom={13}
             style={{ height: '100%', width: '100%' }}
             className="w-full h-full rounded-lg shadow-lg"
-            whenReady={() => {
-              console.log('Map is ready');
-            }}
           >
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -115,7 +123,7 @@ export default function GrandRapidsMap({ className = '', resources = [] }: Grand
                 return (
                   <Marker
                     key={resource.id}
-                    position={[coords.lat as number, coords.lng as number]}
+                    position={coords}
                   >
                     <Popup>
                       <div className="max-w-sm bg-white rounded-lg p-3 text-center">
@@ -189,13 +197,56 @@ export default function GrandRapidsMap({ className = '', resources = [] }: Grand
                           </a>
                         </div>
                       )}
-                    </Popup>
+                       <div className="mt-2 flex items-center gap-2">
+                         <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                         </svg>
+                         <button 
+                            onClick={() => {
+                              setSelectedResource(resource);
+                              setShowRouting(true);
+                            }}
+                            className="text-blue-500 hover:text-blue-700 p-1 bg-transparent border-none focus:outline-none"
+                          >
+                            Get Directions
+                          </button>
+                       </div>
+                     </Popup>
                   </Marker>
                 );
               })}
-          </MapContainer>
-        </div>
-      </div>
-    </ClientOnly>
-  );
+           </MapContainer>
+         </div>
+       </div>
+
+       {showRouting && selectedResource && userLocation && (
+         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+           <div className="bg-white rounded-lg p-6 max-w-md w-full">
+             <div className="flex justify-between items-center mb-4">
+               <h2 className="text-xl font-bold">Directions</h2>
+               <button
+                 onClick={() => {
+                   setShowRouting(false);
+                   setSelectedResource(null);
+                 }}
+                 className="text-gray-500 hover:text-gray-700"
+               >
+                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                 </svg>
+               </button>
+             </div>
+             <RoutingControls
+               resourceLocation={selectedResource.geocodedCoordinates}
+               userLocation={userLocation}
+               onClose={() => {
+                 setShowRouting(false);
+                 setSelectedResource(null);
+               }}
+             />
+           </div>
+         </div>
+       )}
+     </ClientOnly>
+   );
 }
