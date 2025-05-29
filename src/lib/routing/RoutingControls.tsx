@@ -25,6 +25,7 @@ interface RouteResponse {
 export default function RoutingControls({ resourceLocation, userLocation, onClose }: RoutingControlsProps) {
   const [selectedMode, setSelectedMode] = useState<keyof typeof TRANSPORT_MODES>('walk');
   const [routeData, setRouteData] = useState<RouteResponse | null>(null);
+  const [showCloseButton, setShowCloseButton] = useState(false);
 
   const calculateRoute = async () => {
     if (!userLocation?.lat || !userLocation?.lng || !resourceLocation.lat || !resourceLocation.lng) return;
@@ -54,37 +55,39 @@ export default function RoutingControls({ resourceLocation, userLocation, onClos
       <div className="flex flex-col gap-2 relative">
         <div className="flex flex-col gap-2">
           <h3 className="text-lg font-semibold mb-2">Choose your Route method</h3>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 justify-center mb-4">
             {Object.entries(TRANSPORT_MODES).map(([key, mode]) => (
               <button
                 key={key}
                 onClick={() => setSelectedMode(key as keyof typeof TRANSPORT_MODES)}
-                className={`px-4 py-2 rounded-lg transition-colors ${
+                className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors min-w-[100px] ${
                   selectedMode === key ? 'bg-blue-500 text-white' : 'bg-gray-200'
                 }`}
               >
-                <span className="sr-only">{mode.name}</span>
+                <span className="text-sm font-medium">{mode.name}</span>
                 {mode.icon}
               </button>
             ))}
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 mt-4">
             <button
-              onClick={calculateRoute}
-              className="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+              onClick={() => {
+                calculateRoute();
+                setShowCloseButton(true);
+              }}
+              className="w-full px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
               aria-label="Calculate route"
             >
               Calculate Route
             </button>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg"
-              aria-label="Close directions"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            {showCloseButton && (
+              <button
+                onClick={onClose}
+                className="w-full px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
+              >
+                Close
+              </button>
+            )}
           </div>
           {routeData ? (
             <div className="mt-2">

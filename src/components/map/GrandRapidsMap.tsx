@@ -203,6 +203,11 @@ export default function GrandRapidsMap({ className = '', resources = [] }: Grand
                          </svg>
                          <button 
                             onClick={() => {
+                              if (!userLocation) {
+                                // Show a message to share location
+                                alert('To get directions, please share your location');
+                                return;
+                              }
                               setSelectedResource(resource);
                               setShowRouting(true);
                             }}
