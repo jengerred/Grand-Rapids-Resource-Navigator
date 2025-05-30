@@ -94,12 +94,48 @@ export async function POST(request: NextRequest) {
       }
 
       const data = await response.json();
+      
+      // Log the raw API response
+      console.log('Raw API Response:', {
+        data,
+        headers: response.headers,
+        status: response.status
+      });
+
+      // Log the structure of the response
+      console.log('Response Structure:', {
+        hasFeatures: data?.features !== undefined,
+        featuresType: typeof data?.features,
+        featuresLength: Array.isArray(data?.features) ? data.features.length : 'not an array',
+        firstFeature: data?.features?.[0] || 'no first feature',
+        coordinates: data?.features?.[0]?.geometry?.coordinates || 'no coordinates'
+      });
+
+      // Validate the API response
+      if (!data || !data.features || !Array.isArray(data.features) || data.features.length === 0) {
+        console.error('Validation Failed: Missing features');
+        throw new Error('Invalid API response: missing features');
+      }
+
+      const firstFeature = data.features[0];
+      if (!firstFeature || !firstFeature.geometry || !firstFeature.geometry.coordinates) {
+        console.error('Validation Failed: Missing coordinates');
+        throw new Error('Invalid API response: missing coordinates');
+      }
+
+      const coordinates = firstFeature.geometry.coordinates;
+      if (!Array.isArray(coordinates) || coordinates.length === 0) {
+        console.error('Validation Failed: Empty coordinates array');
+        throw new Error('Invalid API response: empty coordinates array');
+      }
+
       // Add our color configuration to the response
       const enhancedData = {
         ...data,
         color: transportModeConfig.color,
         mode: transportMode
       };
+
       return NextResponse.json(enhancedData);
     } catch (error: unknown) {
       const errorLog = {
