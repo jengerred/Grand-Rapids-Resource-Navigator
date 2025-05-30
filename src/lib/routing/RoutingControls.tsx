@@ -26,6 +26,7 @@ export default function RoutingControls({ resourceLocation, userLocation, onClos
   const [selectedMode, setSelectedMode] = useState<keyof typeof TRANSPORT_MODES>('walk');
   const [routeData, setRouteData] = useState<RouteResponse | null>(null);
   const [showCloseButton, setShowCloseButton] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const calculateRoute = async () => {
     if (!userLocation?.lat || !userLocation?.lng || !resourceLocation.lat || !resourceLocation.lng) return;
@@ -34,19 +35,28 @@ export default function RoutingControls({ resourceLocation, userLocation, onClos
       const response = await fetch('/api/directions', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          start: { lat: userLocation.lat, lng: userLocation.lng },
-          end: resourceLocation,
+          start: { lng: userLocation.lng, lat: userLocation.lat },
+          end: { lng: resourceLocation.lng, lat: resourceLocation.lat },
           transportMode: selectedMode
         })
       });
 
-      const routeData = await response.json();
-      setRouteData(routeData);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || `HTTP error! status: ${response.status}`);
+      }
+      
+      setRouteData(data);
+      setShowCloseButton(true);
+      setError(null);
     } catch (error) {
       console.error('Error calculating route:', error);
+      setError(error instanceof Error ? error.message : 'Failed to calculate route');
+      setShowCloseButton(true);
     }
   };
 
@@ -72,13 +82,43 @@ export default function RoutingControls({ resourceLocation, userLocation, onClos
           <div className="flex flex-col gap-2 mt-4">
             <button
               onClick={() => {
+                if (selectedMode === 'bus') {
+                  window.open('https://www.the-rapid.org', '_blank');
+                  onClose();
+                  return;
+                }
+                if (selectedMode === 'scooter') {
+                  window.open('https://www.li.me', '_blank');
+                  onClose();
+                  return;
+                }
+                if (selectedMode === 'uber') {
+                  window.open('https://www.uber.com', '_blank');
+                  onClose();
+                  return;
+                }
+                if (selectedMode === 'lyft') {
+                  window.open('https://www.lyft.com', '_blank');
+                  onClose();
+                  return;
+                }
+                if (selectedMode === 'mdo') {
+                  window.open('https://www.mdorides.com', '_blank');
+                  onClose();
+                  return;
+                }
                 calculateRoute();
                 setShowCloseButton(true);
               }}
               className="w-full px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
               aria-label="Calculate route"
             >
-              Calculate Route
+              {selectedMode === 'bus' ? 'View Schedule' : 
+               selectedMode === 'scooter' ? 'Find Scooters' : 
+               selectedMode === 'uber' ? 'Open Uber' : 
+               selectedMode === 'lyft' ? 'Open Lyft' : 
+               selectedMode === 'mdo' ? 'Open MDO' : 
+               'Calculate Route'}
             </button>
             {showCloseButton && (
               <button
@@ -89,12 +129,16 @@ export default function RoutingControls({ resourceLocation, userLocation, onClos
               </button>
             )}
           </div>
-          {routeData ? (
-            <div className="mt-2">
-              <p>Duration: {Math.round(routeData.summary.duration / 60)} minutes</p>
-              <p>Distance: {Math.round(routeData.summary.distance / 1609.34)} miles</p>
-            </div>
-          ) : null}
+          {error ? (
+             <div className="mt-2 text-red-500">
+               <p>Error: {error}</p>
+             </div>
+           ) : routeData?.summary ? (
+             <div className="mt-2">
+               <p>Duration: {Math.round(routeData.summary.duration / 60)} minutes</p>
+               <p>Distance: {Math.round(routeData.summary.distance / 1609.34)} miles</p>
+             </div>
+           ) : null}
         </div>
       </div>
     </ClientOnly>

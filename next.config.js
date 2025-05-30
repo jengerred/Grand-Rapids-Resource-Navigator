@@ -2,6 +2,11 @@ const path = require('path');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Enable API routes in app directory
+  experimental: {
+    appDir: true,
+    serverActions: true
+  },
   webpack: (config, { isTurbopack }) => {
     if (!isTurbopack) {
       config.resolve.fallback = {

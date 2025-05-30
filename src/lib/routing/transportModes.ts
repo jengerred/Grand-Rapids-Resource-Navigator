@@ -49,9 +49,9 @@ export const TRANSPORT_MODES: Record<string, TransportMode> = {
     icon: '🛴',
     profile: 'cycling-regular',
     color: '#00C9A7',
-    router: 'ors',
+    router: 'external',
     provider: 'lime',
-    apiEndpoint: 'https://api.openrouteservice.org/v2/directions/cycling-regular'
+    apiEndpoint: 'https://www.li.me'
   },
   uber: {
     name: 'Uber',
