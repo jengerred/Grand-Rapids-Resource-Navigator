@@ -42,7 +42,6 @@ interface Route {
 export default function GrandRapidsMap({ className = '', resources = [] }: GrandRapidsMapProps) {
   // Initialize resources state (must be called unconditionally)
   const [resourcesState, setResourcesState] = useState<Resource[]>(resources);
-  const [mapCenter, setMapCenter] = useState<Coordinates | null>(null);
   const [showRouting, setShowRouting] = useState(false);
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
   const [hasLocationPermission, setHasLocationPermission] = useState(false);
@@ -78,16 +77,15 @@ export default function GrandRapidsMap({ className = '', resources = [] }: Grand
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          setMapCenter({ lat: latitude, lng: longitude });
           setUserLocation({ lat: latitude, lng: longitude });
         },
         (error) => {
           console.error('Error getting location:', error);
-          setMapCenter({ lat: 42.9634, lng: -85.6681 }); // Default to Grand Rapids
+          setUserLocation(null);
         }
       );
     } else {
-      setMapCenter({ lat: 42.9634, lng: -85.6681 }); // Default to Grand Rapids
+      setUserLocation(null);
     }
   }, [hasLocationPermission]);
 
@@ -109,7 +107,7 @@ export default function GrandRapidsMap({ className = '', resources = [] }: Grand
         }}>
           <LeafletConfig />
           <MapContainer
-            center={mapCenter ? [mapCenter.lat, mapCenter.lng] : [42.9634, -85.6681]}
+            center={[42.9634, -85.6681]}
             zoom={13}
             style={{ height: '100%', width: '100%' }}
             className="w-full h-full rounded-lg shadow-lg"
