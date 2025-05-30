@@ -34,7 +34,7 @@ interface GrandRapidsMapProps {
 }
 
 interface Route {
-  coordinates: [number, number][];
+  coordinates: [number, number][] | null;
   color: string;
   mode: keyof typeof TRANSPORT_MODES;
 }
@@ -50,7 +50,11 @@ export default function GrandRapidsMap({ className = '', resources = [] }: Grand
 
 
   useEffect(() => {
-    console.log('Route changed:', route);
+    if (route && route.coordinates && route.coordinates.length > 0) {
+      console.log('Route changed:', route);
+    } else {
+      console.log('Invalid route:', route);
+    }
   }, [route]);
 
   useEffect(() => {
@@ -116,7 +120,7 @@ export default function GrandRapidsMap({ className = '', resources = [] }: Grand
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             />
-            {route && route.coordinates.length > 1 && (
+            {route && route.coordinates && route.coordinates.length > 0 && (
               <>
                 <Polyline
                   pathOptions={{
@@ -129,7 +133,7 @@ export default function GrandRapidsMap({ className = '', resources = [] }: Grand
                 />
                 <ClientOnly>
                   <Marker 
-                    position={[route.coordinates[0][1], route.coordinates[0][0]]}
+                    position={route.coordinates && route.coordinates[0] ? ([route.coordinates[0][1], route.coordinates[0][0]] as [number, number]) : [0, 0]}
                     { ...(showRouting && {
                       icon: new L.Icon({
                         iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
