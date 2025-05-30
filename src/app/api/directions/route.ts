@@ -94,8 +94,13 @@ export async function POST(request: NextRequest) {
       }
 
       const data = await response.json();
-      return NextResponse.json(data);
-      return NextResponse.json(data);
+      // Add our color configuration to the response
+      const enhancedData = {
+        ...data,
+        color: transportModeConfig.color,
+        mode: transportMode
+      };
+      return NextResponse.json(enhancedData);
     } catch (error: unknown) {
       const errorLog = {
         message: getErrorMessage(error),

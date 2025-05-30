@@ -33,7 +33,7 @@ export const TRANSPORT_MODES: Record<string, TransportMode> = {
     name: 'Car',
     icon: '🚗',
     profile: 'driving-car',
-    color: '#9E9E9E',
+    color: '#FF0000',
     router: 'ors',
     apiEndpoint: 'https://api.openrouteservice.org/v2/directions/driving-car'
   },

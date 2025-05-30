@@ -1,15 +1,7 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-
-// Import Leaflet components dynamically
-const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
-const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
-const CircleMarker = dynamic(() => import('react-leaflet').then(mod => mod.CircleMarker), { ssr: false });
-const Marker = dynamic(() => import('react-leaflet').then(mod => mod.Marker), { ssr: false });
-const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false });
-
-import { useState, useEffect } from 'react';
 import { LocationPermissionPrompt } from '@/components/map/LocationPermissionPrompt';
 import { ClientOnly } from './ClientOnly';
 import 'leaflet/dist/leaflet.css';
@@ -17,6 +9,16 @@ import './styles.css';
 import { Resource } from '@/types/resource';
 import RoutingControls from '@/lib/routing/RoutingControls';
 import { LeafletConfig } from './LeafletConfig';
+import { TRANSPORT_MODES } from '@/lib/routing/transportModes';
+import { L } from './LeafletConfig';
+
+// Dynamically import Leaflet components to prevent SSR issues
+const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
+const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
+const Marker = dynamic(() => import('react-leaflet').then(mod => mod.Marker), { ssr: false });
+const Popup = dynamic(() => import('react-leaflet').then(mod => mod.Popup), { ssr: false });
+const Polyline = dynamic(() => import('react-leaflet').then(mod => mod.Polyline), { ssr: false });
+const CircleMarker = dynamic(() => import('react-leaflet').then(mod => mod.CircleMarker), { ssr: false });
 
 interface Coordinates {
   lat: number;
@@ -25,14 +27,17 @@ interface Coordinates {
 
 // Type for coordinates that can be used with Leaflet
 
-
 // Type for the component props
 interface GrandRapidsMapProps {
   className?: string;
   resources?: Resource[];
 }
 
-
+interface Route {
+  coordinates: [number, number][];
+  color: string;
+  mode: keyof typeof TRANSPORT_MODES;
+}
 
 export default function GrandRapidsMap({ className = '', resources = [] }: GrandRapidsMapProps) {
   // Initialize resources state (must be called unconditionally)
@@ -42,6 +47,12 @@ export default function GrandRapidsMap({ className = '', resources = [] }: Grand
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
   const [hasLocationPermission, setHasLocationPermission] = useState(false);
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
+  const [route, setRoute] = useState<Route | null>(null);
+
+
+  useEffect(() => {
+    console.log('Route changed:', route);
+  }, [route]);
 
   useEffect(() => {
     setResourcesState(resources);
@@ -49,6 +60,9 @@ export default function GrandRapidsMap({ className = '', resources = [] }: Grand
 
   useEffect(() => {
     console.log('showRouting changed:', showRouting);
+    if (!showRouting) {
+      setRoute(null);
+    }
   }, [showRouting]);
 
   useEffect(() => {
@@ -88,7 +102,11 @@ export default function GrandRapidsMap({ className = '', resources = [] }: Grand
           onPermissionGranted={() => setHasLocationPermission(true)}
           onPermissionDenied={handlePermissionDenied}
         />
-        <div className="map-container" style={{ height: '500px' }}>
+        <div className="map-container" style={{ 
+          height: '500px',
+          position: showRouting ? 'fixed' : 'relative',
+          top: showRouting ? '0' : 'auto'
+        }}>
           <LeafletConfig />
           <MapContainer
             center={mapCenter ? [mapCenter.lat, mapCenter.lng] : [42.9634, -85.6681]}
@@ -100,6 +118,40 @@ export default function GrandRapidsMap({ className = '', resources = [] }: Grand
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             />
+            {route && route.coordinates.length > 1 && (
+              <>
+                <Polyline
+                  pathOptions={{
+                    color: route.color,
+                    weight: 8,
+                    opacity: 0.9,
+                    dashArray: '10, 5'
+                  }}
+                  positions={route.coordinates.map(coord => [coord[1], coord[0]])}
+                />
+                <ClientOnly>
+                  <Marker 
+                    position={[route.coordinates[0][1], route.coordinates[0][0]]}
+                    { ...(showRouting && {
+                      icon: new L.Icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                      })
+                    }) }
+                  >
+                    <Popup>
+                      <div className="text-center">
+                        <h3 className="font-bold">Start</h3>
+                        <p className="text-sm text-gray-600">Your location</p>
+                      </div>
+                    </Popup>
+                  </Marker>
+                </ClientOnly>
+              </>
+            )}
             {userLocation && (
               <CircleMarker
                 center={userLocation}
@@ -124,6 +176,15 @@ export default function GrandRapidsMap({ className = '', resources = [] }: Grand
                   <Marker
                     key={resource.id}
                     position={coords}
+                    { ...(showRouting && selectedResource?.id === resource.id && {
+                      icon: new L.Icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
+                      })
+                    }) }
                   >
                     <Popup>
                       <div className="max-w-sm bg-white rounded-lg p-3 text-center">
@@ -202,7 +263,7 @@ export default function GrandRapidsMap({ className = '', resources = [] }: Grand
                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                          </svg>
                          <button 
-                            onClick={() => {
+                            onClick={(e) => {
                               if (!userLocation) {
                                 // Show a message to share location
                                 alert('To get directions, please share your location');
@@ -210,6 +271,11 @@ export default function GrandRapidsMap({ className = '', resources = [] }: Grand
                               }
                               setSelectedResource(resource);
                               setShowRouting(true);
+                              // Close the popup
+                              const popup = e.currentTarget.closest('.leaflet-popup') as HTMLElement;
+                              if (popup) {
+                                popup.style.display = 'none';
+                              }
                             }}
                             className="text-blue-500 hover:text-blue-700 p-1 bg-transparent border-none focus:outline-none"
                           >
@@ -224,34 +290,52 @@ export default function GrandRapidsMap({ className = '', resources = [] }: Grand
          </div>
        </div>
 
-       {showRouting && selectedResource && userLocation && (
-         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-           <div className="bg-white rounded-lg p-6 max-w-md w-full">
-             <div className="flex justify-between items-center mb-4">
-               <h2 className="text-xl font-bold">Directions</h2>
-               <button
-                 onClick={() => {
-                   setShowRouting(false);
-                   setSelectedResource(null);
-                 }}
-                 className="text-gray-500 hover:text-gray-700"
-               >
-                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                 </svg>
-               </button>
-             </div>
-             <RoutingControls
-               resourceLocation={selectedResource.geocodedCoordinates}
-               userLocation={userLocation}
-               onClose={() => {
-                 setShowRouting(false);
-                 setSelectedResource(null);
-               }}
-             />
-           </div>
-         </div>
-       )}
+        {showRouting && selectedResource && userLocation && (
+          <div id="directions-panel" className="fixed bottom-0 left-1/4 right-1/4 bg-white rounded-t-lg shadow-lg">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">Directions</h2>
+                <button
+                  onClick={() => {
+                    setShowRouting(false);
+                    setSelectedResource(null);
+                  }}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="max-h-[400px] overflow-y-auto mb-4">
+                <RoutingControls
+                  resourceLocation={selectedResource?.geocodedCoordinates || { lat: 0, lng: 0 }}
+                  userLocation={userLocation || { lat: 0, lng: 0 }}
+                  onClose={() => setShowRouting(false)}
+                  onRouteCalculated={(route) => {
+                    console.log('Route received by map:', route);
+                    setRoute({
+                      coordinates: route.coordinates,
+                      color: route.color,
+                      mode: route.mode
+                    });
+                  }}
+                />
+              </div>
+              <div className="flex justify-center">
+                <button
+                  onClick={() => {
+                    setShowRouting(false);
+                    setSelectedResource(null);
+                  }}
+                  className="px-6 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
      </ClientOnly>
    );
 }

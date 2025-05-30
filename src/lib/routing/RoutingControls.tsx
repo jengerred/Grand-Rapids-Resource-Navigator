@@ -8,12 +8,13 @@ interface RoutingControlsProps {
   resourceLocation: { lat: number; lng: number };
   userLocation: { lat: number; lng: number };
   onClose: () => void;
+  onRouteCalculated?: (route: { coordinates: [number, number][], color: string, mode: string }) => void;
 }
 
 interface RouteResponse {
   features: Array<{
     geometry: {
-      coordinates: [number, number][];
+      coordinates: Array<[number, number] | [[number, number]]>;
     };
   }>;
   summary: {
@@ -22,10 +23,10 @@ interface RouteResponse {
   };
 }
 
-export default function RoutingControls({ resourceLocation, userLocation, onClose }: RoutingControlsProps) {
+export default function RoutingControls({ resourceLocation, userLocation, onClose, onRouteCalculated }: RoutingControlsProps) {
   const [selectedMode, setSelectedMode] = useState<keyof typeof TRANSPORT_MODES>('walk');
   const [routeData, setRouteData] = useState<RouteResponse | null>(null);
-  const [showCloseButton, setShowCloseButton] = useState(false);
+
   const [error, setError] = useState<string | null>(null);
 
   const calculateRoute = async () => {
@@ -45,18 +46,45 @@ export default function RoutingControls({ resourceLocation, userLocation, onClos
       });
 
       const data = await response.json();
+      console.log('API Response:', data);
+      console.log('Features:', data.features);
+      console.log('First feature:', data.features[0]);
+      console.log('Geometry:', data.features[0].geometry);
+      console.log('Coordinates:', data.features[0].geometry.coordinates);
       
       if (!response.ok) {
         throw new Error(data.error || `HTTP error! status: ${response.status}`);
       }
       
       setRouteData(data);
-      setShowCloseButton(true);
       setError(null);
+      
+      // Pass route data to map
+      if (onRouteCalculated && data.features && data.features[0]) {
+        const coordinates = data.features[0].geometry.coordinates;
+        // Ensure coordinates are in [lng, lat] format
+        const formattedCoordinates = coordinates.map((coord: [number, number] | [[number, number]]) => {
+          console.log('Processing coordinate:', coord);
+          console.log('Type of first element:', typeof coord[0]);
+          console.log('Value of first element:', coord[0]);
+          
+          if (Array.isArray(coord[0])) {
+            console.log('Nested coordinate:', coord[0]);
+            return [coord[0][0], coord[0][1]];
+          }
+          console.log('Simple coordinate:', coord);
+          return [coord[0], coord[1]];
+        });
+        console.log('Formatted coordinates:', formattedCoordinates);
+        onRouteCalculated({ 
+          coordinates: formattedCoordinates, 
+          color: data.color,
+          mode: selectedMode
+        });
+      }
     } catch (error) {
       console.error('Error calculating route:', error);
       setError(error instanceof Error ? error.message : 'Failed to calculate route');
-      setShowCloseButton(true);
     }
   };
 
@@ -108,7 +136,6 @@ export default function RoutingControls({ resourceLocation, userLocation, onClos
                   return;
                 }
                 calculateRoute();
-                setShowCloseButton(true);
               }}
               className="w-full px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors"
               aria-label="Calculate route"
@@ -118,16 +145,8 @@ export default function RoutingControls({ resourceLocation, userLocation, onClos
                selectedMode === 'uber' ? 'Open Uber' : 
                selectedMode === 'lyft' ? 'Open Lyft' : 
                selectedMode === 'mdo' ? 'Open MDO' : 
-               'Calculate Route'}
+               'Get Directions'}
             </button>
-            {showCloseButton && (
-              <button
-                onClick={onClose}
-                className="w-full px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
-              >
-                Close
-              </button>
-            )}
           </div>
           {error ? (
              <div className="mt-2 text-red-500">
