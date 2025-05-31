@@ -67,6 +67,7 @@ export default function GrandRapidsMap({ className = '', resources = [] }: Grand
     console.log('showRouting changed:', showRouting);
     if (!showRouting) {
       setRoute(null);
+      setSelectedResource(null);
     }
   }, [showRouting]);
 
@@ -113,7 +114,7 @@ export default function GrandRapidsMap({ className = '', resources = [] }: Grand
         }}>
           <LeafletConfig />
           <MapContainer
-            key="map-container-unique"
+            key={`map-container-${showRouting}-${selectedResource?.id || 'none'}`}
             center={[42.9634, -85.6681]}
             zoom={13}
             style={{ height: '100%', width: '100%' }}
