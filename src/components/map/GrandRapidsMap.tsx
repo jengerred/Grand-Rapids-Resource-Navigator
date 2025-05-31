@@ -49,7 +49,6 @@ export default function GrandRapidsMap({
 }: GrandRapidsMapProps) {
   // Initialize resources state (must be called unconditionally)
   const [resourcesState, setResourcesState] = useState<Resource[]>(resources);
-  const [clickedResource, setClickedResource] = useState<Resource | null>(null);
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
   const [hasLocationPermission, setHasLocationPermission] = useState(false);
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
@@ -124,7 +123,7 @@ export default function GrandRapidsMap({
             scrollWheelZoom={true}
             style={{ height: '100%', width: '100%', borderRadius: '8px' }}
             className="rounded-lg shadow-lg"
-            key="map-container"
+            key={`map-container-${showRouting}-${selectedResource?.id || 'none'}`}
           >
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -183,7 +182,6 @@ export default function GrandRapidsMap({
                 return coords && coords.lat !== null && coords.lng !== null;
               })
               .map((resource) => {
-                const isClickable = resource === clickedResource || !showRouting;
                 const coords = resource.geocodedCoordinates;
                 const adjustedCoords = {
                   lat: coords.lat - 0.00065,
@@ -193,28 +191,17 @@ export default function GrandRapidsMap({
                   <Marker
                     key={resource.id}
                     position={Object.assign({}, adjustedCoords)}
-                    icon={showRouting && selectedResource?.id === resource.id 
-                      ? new L.Icon({
-                          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-                          iconSize: [25, 41],
-                          iconAnchor: [12, 41],
-                          popupAnchor: [1, -34],
-                          shadowSize: [41, 41]
-                        })
-                      : new L.Icon.Default()}
-                    eventHandlers={{
-                      click: isClickable ? (e: any) => {
-                        setSelectedResource(resource);
-                        setClickedResource(resource);
-                        const popup = e.currentTarget.closest('.leaflet-popup') as HTMLElement;
-                        if (popup) {
-                          popup.style.display = 'none';
-                        }
-                        setTimeout(() => {
-                          setShowRouting(true);
-                        }, 100);
-                      } : undefined
-                    }}
+                    icon={
+                      showRouting && selectedResource?.id === resource.id
+                        ? new L.Icon({
+                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                            iconSize: [25, 41],
+                            iconAnchor: [12, 41],
+                            popupAnchor: [1, -34],
+                            shadowSize: [41, 41]
+                          })
+                        : new L.Icon.Default()
+                    }
                   >
                     <Popup>
                       <div className="max-w-sm bg-white rounded-lg p-3 text-center">
@@ -302,7 +289,6 @@ export default function GrandRapidsMap({
                               
                               // First set selected resource and close popup
                               setSelectedResource(resource);
-                              setClickedResource(resource);
                               const popup = e.currentTarget.closest('.leaflet-popup') as HTMLElement;
                               if (popup) {
                                 popup.style.display = 'none';
