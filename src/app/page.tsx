@@ -33,20 +33,27 @@ export default function Home() {
     <div className="min-h-screen bg-gray-100">
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col gap-4">
-          <div className="text-center mb-4">
+          <div className="text-center mb-4" style={{
+            display: showRouting ? 'none' : 'block'
+          }}>
             <h1 className="text-3xl font-bold mb-2">Grand Rapids Resource Navigator</h1>
             <p className="text-gray-600">Find resources and plan your route in Grand Rapids</p>
           </div>
 
           <div className="relative flex-1">
             <div className="w-full h-[80vh] rounded-lg shadow-lg" style={{
-              position: showRouting ? 'fixed' : 'relative',
-              top: showRouting ? '16px' : '0',
-              left: '0',
-              right: '0',
+              position: 'relative',
+              marginTop: showRouting ? '16px' : '0',
+              marginLeft: showRouting ? '16px' : '0',
+              marginRight: showRouting ? '16px' : '0',
               zIndex: showRouting ? 100 : 0
-            }} key={`map-container-${showRouting}`}>
-              <GrandRapidsMap className="w-full h-full" resources={resources} showRouting={showRouting} setShowRouting={setShowRouting} />
+            }} key="map-container">
+              <GrandRapidsMap 
+                className="w-full h-full" 
+                resources={resources} 
+                showRouting={showRouting} 
+                setShowRouting={setShowRouting} 
+              />
             </div>
           </div>
         </div>

@@ -41,10 +41,14 @@ interface Route {
   mode: keyof typeof TRANSPORT_MODES;
 }
 
-export default function GrandRapidsMap({ className = '', resources = [] }: GrandRapidsMapProps) {
+export default function GrandRapidsMap({ 
+  className = '', 
+  resources = [],
+  showRouting,
+  setShowRouting
+}: GrandRapidsMapProps) {
   // Initialize resources state (must be called unconditionally)
   const [resourcesState, setResourcesState] = useState<Resource[]>(resources);
-  const [showRouting, setShowRouting] = useState(false);
   const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
   const [hasLocationPermission, setHasLocationPermission] = useState(false);
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
@@ -114,11 +118,12 @@ export default function GrandRapidsMap({ className = '', resources = [] }: Grand
         }}>
           <LeafletConfig />
           <MapContainer
-            key={`map-container-${showRouting}-${selectedResource?.id || 'none'}`}
             center={[42.9634, -85.6681]}
             zoom={13}
-            style={{ height: '100%', width: '100%' }}
-            className="w-full h-full rounded-lg shadow-lg"
+            scrollWheelZoom={true}
+            style={{ height: '100%', width: '100%', borderRadius: '8px' }}
+            className="rounded-lg shadow-lg"
+            key="map-container"
           >
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -281,13 +286,18 @@ export default function GrandRapidsMap({ className = '', resources = [] }: Grand
                                 alert('To get directions, please share your location');
                                 return;
                               }
+                              
+                              // First set selected resource and close popup
                               setSelectedResource(resource);
-                              setShowRouting(true);
-                              // Close the popup
                               const popup = e.currentTarget.closest('.leaflet-popup') as HTMLElement;
                               if (popup) {
                                 popup.style.display = 'none';
                               }
+                              
+                              // After popup is closed, update routing state
+                              setTimeout(() => {
+                                setShowRouting(true);
+                              }, 100);
                             }}
                             className="text-blue-500 hover:text-blue-700 p-1 bg-transparent border-none focus:outline-none"
                           >
@@ -303,7 +313,10 @@ export default function GrandRapidsMap({ className = '', resources = [] }: Grand
        </div>
 
         {showRouting && selectedResource && userLocation && (
-          <div id="directions-panel" className="fixed bottom-0 left-1/4 right-1/4 bg-white rounded-t-lg shadow-lg">
+          <div id="directions-panel" className="fixed bottom-0 left-1/4 right-1/4 bg-white rounded-t-lg shadow-lg" style={{
+            zIndex: 1000,
+            position: 'fixed'
+          }}>
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold">Directions</h2>
@@ -323,7 +336,9 @@ export default function GrandRapidsMap({ className = '', resources = [] }: Grand
                 <RoutingControls
                   resourceLocation={selectedResource?.geocodedCoordinates || { lat: 0, lng: 0 }}
                   userLocation={userLocation || { lat: 0, lng: 0 }}
-                  onClose={() => setShowRouting(false)}
+                  onClose={() => {
+                    setShowRouting(false);
+                  }}
                   onRouteCalculated={(route) => {
                     console.log('Route received by map:', route);
                     setRoute({
