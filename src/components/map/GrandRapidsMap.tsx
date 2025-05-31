@@ -31,6 +31,8 @@ interface Coordinates {
 interface GrandRapidsMapProps {
   className?: string;
   resources?: Resource[];
+  showRouting: boolean;
+  setShowRouting: (show: boolean) => void;
 }
 
 interface Route {
@@ -104,13 +106,14 @@ export default function GrandRapidsMap({ className = '', resources = [] }: Grand
           onPermissionGranted={() => setHasLocationPermission(true)}
           onPermissionDenied={handlePermissionDenied}
         />
-        <div className="map-container" style={{ 
+        <div className="map-container" key="map-container-unique" style={{ 
           height: '500px',
-          position: showRouting ? 'fixed' : 'relative',
-          top: showRouting ? '0' : 'auto'
+          position: 'relative',
+          top: '0'
         }}>
           <LeafletConfig />
           <MapContainer
+            key="map-container-unique"
             center={[42.9634, -85.6681]}
             zoom={13}
             style={{ height: '100%', width: '100%' }}
@@ -129,11 +132,11 @@ export default function GrandRapidsMap({ className = '', resources = [] }: Grand
                     opacity: 0.9,
                     dashArray: '10, 5'
                   }}
-                  positions={route.coordinates.map(coord => [coord[1], coord[0]])}
+                  positions={route?.mode === 'walk' || route?.mode === 'bike' || route?.mode === 'car' ? route.coordinates.map(coord => [coord[1], coord[0]]) : route.coordinates.map(coord => [coord[0], coord[1]])}
                 />
                 <ClientOnly>
                   <Marker 
-                    position={route.coordinates && route.coordinates[0] ? ([route.coordinates[0][1], route.coordinates[0][0]] as [number, number]) : [0, 0]}
+                    position={userLocation ? [userLocation.lat, userLocation.lng] : [0, 0]}
                     { ...(showRouting && {
                       icon: new L.Icon({
                         iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
@@ -174,19 +177,25 @@ export default function GrandRapidsMap({ className = '', resources = [] }: Grand
               })
               .map((resource) => {
                 const coords = resource.geocodedCoordinates;
+                const adjustedCoords = {
+                  lat: coords.lat - 0.00065,
+                  lng: coords.lng + 0.0002
+                };
                 return (
                   <Marker
                     key={resource.id}
-                    position={coords}
-                    { ...(showRouting && selectedResource?.id === resource.id && {
-                      icon: new L.Icon({
-                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-                        iconSize: [25, 41],
-                        iconAnchor: [12, 41],
-                        popupAnchor: [1, -34],
-                        shadowSize: [41, 41]
-                      })
-                    }) }
+                    position={Object.assign({}, adjustedCoords)}
+                    icon={
+                      showRouting && selectedResource?.id === resource.id
+                        ? new L.Icon({
+                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                            iconSize: [25, 41],
+                            iconAnchor: [12, 41],
+                            popupAnchor: [1, -34],
+                            shadowSize: [41, 41]
+                          })
+                        : new L.Icon.Default()
+                    }
                   >
                     <Popup>
                       <div className="max-w-sm bg-white rounded-lg p-3 text-center">

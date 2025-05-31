@@ -49,7 +49,13 @@ export default function RoutingControls({ resourceLocation, userLocation, onClos
       console.log('API Response:', data);
       
       if (!response.ok) {
-        throw new Error(data.error || `HTTP error! status: ${response.status}`);
+        console.error('API Error Response:', {
+          status: response.status,
+          statusText: response.statusText,
+          error: data.error,
+          details: data.details
+        });
+        throw new Error(data.error || data.details?.message || `HTTP error! status: ${response.status}`);
       }
 
       // Validate the response structure

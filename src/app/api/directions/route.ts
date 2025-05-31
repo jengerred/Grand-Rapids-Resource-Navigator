@@ -90,17 +90,36 @@ export async function POST(request: NextRequest) {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
-        throw new Error(`API error: ${response.status} ${response.statusText}\nDetails: ${JSON.stringify(errorData)}`);
+        const errorMessage = errorData?.error || `API error: ${response.status} ${response.statusText}`;
+        console.error('API Response Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorData,
+          errorMessage
+        });
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
       
-      // Log the raw API response
+      // Log the raw API response with more details
       console.log('Raw API Response:', {
         data,
-        headers: response.headers,
-        status: response.status
+        headers: Object.fromEntries(response.headers.entries()),
+        status: response.status,
+        statusText: response.statusText,
+        isProduction: process.env.NODE_ENV === 'production',
+        env: process.env.NODE_ENV
       });
+
+      // Log the actual coordinates if they exist
+      if (data.features && data.features[0] && data.features[0].geometry && data.features[0].geometry.coordinates) {
+        console.log('API Coordinates:', {
+          firstCoordinate: data.features[0].geometry.coordinates[0],
+          coordinateCount: data.features[0].geometry.coordinates.length,
+          coordinateType: typeof data.features[0].geometry.coordinates[0]
+        });
+      }
 
       // Log the structure of the response
       console.log('Response Structure:', {
@@ -129,6 +148,9 @@ export async function POST(request: NextRequest) {
         throw new Error('Invalid API response: empty coordinates array');
       }
 
+      // Log the actual coordinates
+      console.log('Final Coordinates:', coordinates);
+
       // Add our color configuration to the response
       const enhancedData = {
         ...data,
@@ -154,7 +176,7 @@ export async function POST(request: NextRequest) {
       });
 
       const errorResponse: ErrorResponse = {
-        error: 'Failed to get directions',
+        error: errorLog.message,
         details: errorLog
       };
 
