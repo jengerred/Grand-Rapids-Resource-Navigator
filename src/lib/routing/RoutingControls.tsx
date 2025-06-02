@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TRANSPORT_MODES } from '@/lib/routing/transportModes';
 import { ClientOnly } from '@/components/map/ClientOnly';
 
@@ -24,12 +24,22 @@ interface RouteResponse {
 }
 
 export default function RoutingControls({ resourceLocation, userLocation, onClose, onRouteCalculated }: RoutingControlsProps) {
-  const [selectedMode, setSelectedMode] = useState<keyof typeof TRANSPORT_MODES>('walk');
+  const [selectedMode, setSelectedMode] = useState<keyof typeof TRANSPORT_MODES>('car');
   const [routeData, setRouteData] = useState<RouteResponse | null>(null);
 
   const [error, setError] = useState<string | null>(null);
 
+  // Recalculate route whenever mode or locations change
+  useEffect(() => {
+    calculateRoute();
+  }, [selectedMode, userLocation, resourceLocation]);
+
   const calculateRoute = async () => {
+    // Skip route calculation for special modes without API endpoints
+    if (['bus', 'scooter', 'uber', 'lyft', 'mdo'].includes(selectedMode)) {
+      return;
+    }
+
     if (!userLocation?.lat || !userLocation?.lng || !resourceLocation.lat || !resourceLocation.lng) return;
 
     try {
@@ -123,7 +133,37 @@ export default function RoutingControls({ resourceLocation, userLocation, onClos
             {Object.entries(TRANSPORT_MODES).map(([key, mode]) => (
               <button
                 key={key}
-                onClick={() => setSelectedMode(key as keyof typeof TRANSPORT_MODES)}
+                onClick={() => {
+                  // Handle special modes
+                  if (key === 'bus') {
+                    setSelectedMode(key as keyof typeof TRANSPORT_MODES);
+                    window.open('https://www.the-rapid.org', '_blank');
+                    return;
+                  }
+                  if (key === 'scooter') {
+                    setSelectedMode(key as keyof typeof TRANSPORT_MODES);
+                    window.open('https://www.li.me', '_blank');
+                    return;
+                  }
+                  if (key === 'uber') {
+                    setSelectedMode(key as keyof typeof TRANSPORT_MODES);
+                    window.open('https://www.uber.com', '_blank');
+                    return;
+                  }
+                  if (key === 'lyft') {
+                    setSelectedMode(key as keyof typeof TRANSPORT_MODES);
+                    window.open('https://www.lyft.com', '_blank');
+                    return;
+                  }
+                  if (key === 'mdo') {
+                    setSelectedMode(key as keyof typeof TRANSPORT_MODES);
+                    window.open('https://www.mdorides.com', '_blank');
+                    return;
+                  }
+
+                  // For standard modes, just update the selected mode
+                  setSelectedMode(key as keyof typeof TRANSPORT_MODES);
+                }}
                 className={`flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-colors min-w-[100px] ${
                   selectedMode === key ? 'bg-blue-500 text-white' : 'bg-gray-200'
                 }`}

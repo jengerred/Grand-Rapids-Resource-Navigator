@@ -13,13 +13,13 @@ export interface TransportMode {
 }
 
 export const TRANSPORT_MODES: Record<string, TransportMode> = {
-  walk: {
-    name: 'Walk',
-    icon: '🚶',
-    profile: 'foot-walking',
-    color: '#4CAF50',
+  car: {
+    name: 'Car',
+    icon: '🚗',
+    profile: 'driving-car',
+    color: '#FF0000',
     router: 'ors',
-    apiEndpoint: 'https://api.openrouteservice.org/v2/directions/foot-walking'
+    apiEndpoint: 'https://api.openrouteservice.org/v2/directions/driving-car'
   },
   bike: {
     name: 'Bike',
@@ -29,13 +29,13 @@ export const TRANSPORT_MODES: Record<string, TransportMode> = {
     router: 'ors',
     apiEndpoint: 'https://api.openrouteservice.org/v2/directions/cycling-regular'
   },
-  car: {
-    name: 'Car',
-    icon: '🚗',
-    profile: 'driving-car',
-    color: '#FF0000',
+  walk: {
+    name: 'Walk',
+    icon: '🚶',
+    profile: 'foot-walking',
+    color: '#4CAF50',
     router: 'ors',
-    apiEndpoint: 'https://api.openrouteservice.org/v2/directions/driving-car'
+    apiEndpoint: 'https://api.openrouteservice.org/v2/directions/foot-walking'
   },
   bus: {
     name: 'Bus',
