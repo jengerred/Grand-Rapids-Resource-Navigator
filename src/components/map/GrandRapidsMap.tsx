@@ -107,11 +107,12 @@ export default function GrandRapidsMap({
   const mapRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const mapContainer = mapRef.current;
     return () => {
       // Cleanup any existing map instances
       const L = (window as Window & typeof globalThis & { L?: typeof import('leaflet') }).L;
-      if (L && mapRef.current) {
-        const map = L.map(mapRef.current);
+      if (L && mapContainer) {
+        const map = L.map(mapContainer);
         if (map && typeof map.remove === 'function') {
           map.remove();
         }
