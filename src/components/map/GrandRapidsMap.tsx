@@ -139,6 +139,7 @@ export default function GrandRapidsMap({
               scrollWheelZoom={true}
               style={{ height: '100%', width: '100%', borderRadius: '8px' }}
               className="rounded-lg shadow-lg"
+              key={`map-container-${showRouting}-${selectedResource?.id || 'none'}`}
             >
               <TileLayer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -351,7 +352,12 @@ export default function GrandRapidsMap({
                     resourceLocation={selectedResource?.geocodedCoordinates || { lat: 0, lng: 0 }}
                     userLocation={userLocation || { lat: 0, lng: 0 }}
                     onClose={() => {
+                      // First hide the panel
                       setShowRouting(false);
+                      // After panel is hidden, reset the selected resource with a delay
+                      setTimeout(() => {
+                        setSelectedResource(null);
+                      }, 100);
                     }}
                     onRouteCalculated={(route) => {
                       console.log('Route received by map:', route);
