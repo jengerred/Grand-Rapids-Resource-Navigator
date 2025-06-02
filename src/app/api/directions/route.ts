@@ -79,6 +79,7 @@ export async function POST(request: NextRequest) {
       url.searchParams.append('api_key', apiKey);
       url.searchParams.append('start', `${start.lng},${start.lat}`);
       url.searchParams.append('end', `${end.lng},${end.lat}`);
+      url.searchParams.append('instructions', 'true');
 
       const response = await fetch(url.toString(), {
         method: 'GET',
@@ -102,14 +103,47 @@ export async function POST(request: NextRequest) {
 
       const data = await response.json();
       
-      // Log the raw API response with more details
-      console.log('Raw API Response:', {
-        data,
-        headers: Object.fromEntries(response.headers.entries()),
-        status: response.status,
-        statusText: response.statusText,
-        isProduction: process.env.NODE_ENV === 'production',
-        env: process.env.NODE_ENV
+      // Log the raw API response
+      console.log('Raw API Response:', data);
+      
+      // Log the exact structure we're looking for
+      console.log('Response Structure:', {
+        hasRoutes: data?.routes !== undefined,
+        routesLength: Array.isArray(data?.routes) ? data.routes.length : 'not an array',
+        hasSegments: data?.routes?.[0]?.segments !== undefined,
+        segmentsLength: Array.isArray(data?.routes?.[0]?.segments) ? data.routes[0].segments.length : 'not an array',
+        hasSteps: data?.routes?.[0]?.segments?.[0]?.steps !== undefined,
+        stepsLength: Array.isArray(data?.routes?.[0]?.segments?.[0]?.steps) ? data.routes[0].segments[0].steps.length : 'not an array',
+        firstStep: data?.routes?.[0]?.segments?.[0]?.steps?.[0]
+      });
+
+      // Log the exact keys in the response
+      console.log('Response Keys:', Object.keys(data));
+
+      // Log the features if they exist
+      if (data.features) {
+        console.log('Features:', {
+          count: data.features.length,
+          firstFeature: data.features[0]
+        });
+      }
+
+      // Log the routes if they exist
+      if (data.routes) {
+        console.log('Routes:', {
+          count: data.routes.length,
+          firstRoute: data.routes[0]
+        });
+      }
+
+      // Log the exact structure we're looking for
+      console.log('Response Structure:', {
+        hasRoutes: data?.routes !== undefined,
+        routesLength: Array.isArray(data?.routes) ? data.routes.length : 'not an array',
+        hasSegments: data?.routes?.[0]?.segments !== undefined,
+        segmentsLength: Array.isArray(data?.routes?.[0]?.segments) ? data.routes[0].segments.length : 'not an array',
+        hasSteps: data?.routes?.[0]?.segments?.[0]?.steps !== undefined,
+        stepsLength: Array.isArray(data?.routes?.[0]?.segments?.[0]?.steps) ? data.routes[0].segments[0].steps.length : 'not an array'
       });
 
       // Log the actual coordinates if they exist
@@ -151,11 +185,17 @@ export async function POST(request: NextRequest) {
       // Log the actual coordinates
       console.log('Final Coordinates:', coordinates);
 
-      // Add our color configuration to the response
+      // Extract instructions from the response
+      const instructions = data.features?.[0]?.properties?.segments?.[0]?.steps || [];
+      console.log('Extracted Instructions:', instructions);
+      console.log('First instruction:', instructions[0]);
+
+      // Add our color configuration and instructions to the response
       const enhancedData = {
         ...data,
         color: transportModeConfig.color,
-        mode: transportMode
+        mode: transportMode,
+        instructions: instructions
       };
 
       return NextResponse.json(enhancedData);

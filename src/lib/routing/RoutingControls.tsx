@@ -22,6 +22,11 @@ interface RouteResponse {
     duration: number;
     distance: number;
   };
+  instructions?: Array<{
+    instruction: string;
+    distance: number;
+    duration: number;
+  }>;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -83,8 +88,9 @@ export default function RoutingControls({ resourceLocation, userLocation, onClos
       }
 
       const coordinates = firstFeature.geometry.coordinates;
-      if (!Array.isArray(coordinates) || coordinates.length === 0) {
-        throw new Error('Invalid API response: empty coordinates array');
+
+      if (!coordinates || !Array.isArray(coordinates)) {
+        throw new Error('Invalid API response: missing coordinates');
       }
 
       // Ensure coordinates are in [lng, lat] format
@@ -111,16 +117,20 @@ export default function RoutingControls({ resourceLocation, userLocation, onClos
 
       console.log('Formatted coordinates:', formattedCoordinates);
       
-      // Only pass valid route data to map
-      if (onRouteCalculated) {
-        onRouteCalculated({ 
-          coordinates: formattedCoordinates, 
-          color: data.color,
-          mode: selectedMode
-        });
-      }
+      // Update route data state
+      setRouteData({
+        features: data.features,
+        summary: data.summary,
+        instructions: data.instructions || []
+      });
 
-      setRouteData(data);
+      // Pass route data to map
+      onRouteCalculated?.({
+        coordinates: formattedCoordinates,
+        color: data.color,
+        mode: data.mode
+      });
+
       setError(null);
     } catch (error) {
       console.error('Error calculating route:', error);
@@ -181,15 +191,43 @@ export default function RoutingControls({ resourceLocation, userLocation, onClos
 
           </div>
           {error ? (
-             <div className="mt-2 text-red-500">
-               <p>Error: {error}</p>
-             </div>
-           ) : routeData?.summary ? (
-             <div className="mt-2">
-               <p>Duration: {Math.round(routeData.summary.duration / 60)} minutes</p>
-               <p>Distance: {Math.round(routeData.summary.distance / 1609.34)} miles</p>
-             </div>
-           ) : null}
+            <div className="mt-2 text-red-500">
+              <p>Error: {error}</p>
+            </div>
+          ) : routeData?.instructions && routeData.instructions.length > 0 ? (
+            <div className="mt-4 space-y-4">
+              <div className="p-4 bg-white rounded-lg shadow">
+                <h3 className="text-lg font-semibold mb-2">Route Instructions</h3>
+                {routeData.instructions.map((step, index) => (
+                  <div key={index} className="p-2 border rounded mb-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Step {index + 1}</span>
+                      <span className="text-sm text-gray-600">{step.duration ? Math.round(step.duration / 60) + ' min' : 'N/A'}</span>
+                    </div>
+                    <p className="mt-1">{step.instruction}</p>
+                    <p className="text-sm text-gray-600">{step.distance ? Math.round(step.distance) + ' m' : 'N/A'}</p>
+                  </div>
+                ))}
+                {routeData.summary && (
+                  <div className="mt-4 p-2 border rounded">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Total Duration</span>
+                      <span className="text-sm text-gray-600">{routeData.summary.duration ? Math.round(routeData.summary.duration / 60) + ' min' : 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Total Distance</span>
+                      <span className="text-sm text-gray-600">{routeData.summary.distance ? Math.round(routeData.summary.distance / 1609.34) + ' miles' : 'N/A'}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : routeData?.summary ? (
+            <div className="mt-2">
+              <p>Duration: {routeData.summary.duration ? Math.round(routeData.summary.duration / 60) + ' minutes' : 'N/A'}</p>
+              <p>Distance: {routeData.summary.distance ? Math.round(routeData.summary.distance / 1609.34) + ' miles' : 'N/A'}</p>
+            </div>
+          ) : null}
         </div>
       </div>
     </ClientOnly>
