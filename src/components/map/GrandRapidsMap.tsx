@@ -112,10 +112,13 @@ export default function GrandRapidsMap({
       // Cleanup any existing map instances
       const L = (window as Window & typeof globalThis & { L?: typeof import('leaflet') }).L;
       if (L && mapContainer) {
-        const map = L.map(mapContainer);
-        if (map && typeof map.remove === 'function') {
-          map.remove();
+        // Clear any existing map from the container
+        const mapElement = mapContainer.querySelector('.leaflet-container');
+        if (mapElement) {
+          mapElement.remove();
         }
+        // Clear the container
+        mapContainer.innerHTML = '';
       }
     };
   }, []);
@@ -200,14 +203,10 @@ export default function GrandRapidsMap({
                 })
                 .map((resource) => {
                   const coords = resource.geocodedCoordinates;
-                  const adjustedCoords = {
-                    lat: coords.lat - 0.00065,
-                    lng: coords.lng + 0.0002
-                  };
                   return (
                     <Marker
                       key={resource.id}
-                      position={Object.assign({}, adjustedCoords)}
+                      position={Object.assign({}, coords)}
                       icon={
                         showRouting && selectedResource?.id === resource.id
                           ? new L.Icon({

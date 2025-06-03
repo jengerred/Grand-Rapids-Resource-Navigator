@@ -29,6 +29,22 @@ interface RouteResponse {
   }>;
 }
 
+// Helper function to format duration in seconds to a readable string
+const formatDuration = (seconds: number): string => {
+  const roundedSeconds = Math.round(seconds);
+  const hours = Math.floor(roundedSeconds / 3600);
+  const minutes = Math.floor((roundedSeconds % 3600) / 60);
+  const remainingSeconds = roundedSeconds % 60;
+  
+  if (hours > 0) {
+    return `${hours}h ${minutes}m ${remainingSeconds}s`;
+  } else if (minutes > 0) {
+    return `${minutes}m ${remainingSeconds}s`;
+  } else {
+    return `${remainingSeconds}s`;
+  }
+};
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export default function RoutingControls({ resourceLocation, userLocation, onClose, onRouteCalculated }: RoutingControlsProps) {
   const [selectedMode, setSelectedMode] = useState<keyof typeof TRANSPORT_MODES>('car');
@@ -197,34 +213,36 @@ export default function RoutingControls({ resourceLocation, userLocation, onClos
           ) : routeData?.instructions && routeData.instructions.length > 0 ? (
             <div className="mt-4 space-y-4">
               <div className="p-4 bg-white rounded-lg shadow">
-                <h3 className="text-lg font-semibold mb-2">Route Instructions</h3>
-                {routeData.instructions.map((step, index) => (
-                  <div key={index} className="p-2 border rounded mb-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Step {index + 1}</span>
-                      <span className="text-sm text-gray-600">{step.duration ? Math.round(step.duration / 60) + ' min' : 'N/A'}</span>
-                    </div>
-                    <p className="mt-1">{step.instruction}</p>
-                    <p className="text-sm text-gray-600">{step.distance ? Math.round(step.distance) + ' m' : 'N/A'}</p>
-                  </div>
-                ))}
-                {routeData.summary && (
-                  <div className="mt-4 p-2 border rounded">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Total Duration</span>
-                      <span className="text-sm text-gray-600">{routeData.summary.duration ? Math.round(routeData.summary.duration / 60) + ' min' : 'N/A'}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Total Distance</span>
-                      <span className="text-sm text-gray-600">{routeData.summary.distance ? Math.round(routeData.summary.distance / 1609.34) + ' miles' : 'N/A'}</span>
+                <div className="flex flex-col gap-4">
+                  <div className="bg-gray-100 p-4 rounded-lg">
+                    <div className="flex flex-col gap-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Total Time</span>
+                        <span className="font-medium text-gray-800">{routeData.summary?.duration ? formatDuration(routeData.summary.duration) : 'N/A'}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Total Distance</span>
+                        <span className="font-medium text-gray-800">{routeData.summary?.distance ? Math.round(routeData.summary.distance / 1609.34) + ' miles' : 'N/A'}</span>
+                      </div>
                     </div>
                   </div>
-                )}
+                  <h3 className="text-lg font-semibold mb-2">Route Instructions</h3>
+                  {routeData.instructions.map((step, index) => (
+                    <div key={index} className="p-2 border rounded mb-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Step {index + 1}</span>
+                        <span className="text-sm text-gray-600">{step.duration ? formatDuration(step.duration) : 'N/A'}</span>
+                      </div>
+                      <p className="mt-1">{step.instruction}</p>
+                      <p className="text-sm text-gray-600">{step.distance ? Math.round(step.distance) + ' m' : 'N/A'}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           ) : routeData?.summary ? (
             <div className="mt-2">
-              <p>Duration: {routeData.summary.duration ? Math.round(routeData.summary.duration / 60) + ' minutes' : 'N/A'}</p>
+              <p>Duration: {routeData.summary.duration ? formatDuration(routeData.summary.duration) : 'N/A'}</p>
               <p>Distance: {routeData.summary.distance ? Math.round(routeData.summary.distance / 1609.34) + ' miles' : 'N/A'}</p>
             </div>
           ) : null}

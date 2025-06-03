@@ -185,17 +185,24 @@ export async function POST(request: NextRequest) {
       // Log the actual coordinates
       console.log('Final Coordinates:', coordinates);
 
-      // Extract instructions from the response
+      // Extract instructions and summary from the response
       const instructions = data.features?.[0]?.properties?.segments?.[0]?.steps || [];
+      const summary = {
+        duration: data.features?.[0]?.properties?.summary?.duration || 0,
+        distance: data.features?.[0]?.properties?.summary?.distance || 0
+      };
+
       console.log('Extracted Instructions:', instructions);
       console.log('First instruction:', instructions[0]);
+      console.log('Summary:', summary);
 
-      // Add our color configuration and instructions to the response
+      // Add our color configuration, instructions, and summary to the response
       const enhancedData = {
         ...data,
         color: transportModeConfig.color,
         mode: transportMode,
-        instructions: instructions
+        instructions: instructions,
+        summary: summary
       };
 
       return NextResponse.json(enhancedData);

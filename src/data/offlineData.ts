@@ -96,8 +96,8 @@ export const offlineResources = [
     phone: "(616) 454-4011",
     website: "https://theotherway.org",
     geocodedCoordinates: {
-      lat: 42.964013314218946,
-      lng: -85.6858006009266
+      lat: 42.9633298,
+      lng: -85.6853547
     },
     createdAt: new Date(),
     updatedAt: new Date()
