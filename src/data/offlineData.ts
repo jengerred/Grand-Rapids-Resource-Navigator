@@ -7,6 +7,38 @@ const COLLECTION_NAME = 'resources';
 export const offlineResources = [
   {
     id: new ObjectId().toString(),
+    name: "Hispanic Center of Western MI",
+    address: "1204 Cesar E. Chavez Ave SW",
+    city: "Grand Rapids",
+    state: "MI",
+    zip: "49503",
+    category: "Community Services",
+    services: [
+      "Basic Needs Assistance",
+      "Workforce Development",
+      "Language Services",
+      "Youth Education",
+      "Community Outreach",
+      "Food Pantry",
+      "Financial Assistance",
+      "Career Coaching",
+      "GED Classes",
+      "Language Classes",
+      "Childcare Services",
+      "Health Navigation"
+    ],
+    hours: "9 AM - 4:45 PM Mon-Fri",
+    phone: "(616) 742-0200",
+    website: "http://hispanic-center.org",
+    geocodedCoordinates: {
+      lat: 42.941425698017014,
+      lng: -85.68243507883228
+    },
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    id: new ObjectId().toString(),
     name: "Matthews House Ministry",
     address: "766 7th St NW",
     city: "Grand Rapids",

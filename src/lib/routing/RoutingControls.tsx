@@ -52,9 +52,6 @@ export default function RoutingControls({ resourceLocation, userLocation, onClos
 
   const [error, setError] = useState<string | null>(null);
 
-  // Recalculate route whenever mode or locations change
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     calculateRoute();
   }, [selectedMode, userLocation, resourceLocation]);
@@ -64,7 +61,7 @@ export default function RoutingControls({ resourceLocation, userLocation, onClos
     if (['bus', 'scooter', 'uber', 'lyft', 'mdo'].includes(selectedMode)) {
       return;
     }
-
+    
     if (!userLocation?.lat || !userLocation?.lng || !resourceLocation.lat || !resourceLocation.lng) return;
 
     try {
