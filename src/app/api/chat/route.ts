@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { spawn } from 'child_process';
 import { promisify } from 'util';
-import { type ChildProcess } from 'child_process';
+import { type ChildProcess, exec as childExec } from 'child_process';
 
 interface ChatRequest {
   message: string;
@@ -22,7 +22,7 @@ const rateLimit = {
 // In-memory cache for responses
 const responseCache = new Map<string, string>();
 
-const exec = promisify(require('child_process').exec);
+const exec = promisify(childExec) as (command: string, options?: { env?: NodeJS.ProcessEnv }) => Promise<{ stdout: string; stderr: string; }>; // Properly typed promisified exec
 
 export async function POST(request: Request) {
   console.log('=== START OF API REQUEST ===');

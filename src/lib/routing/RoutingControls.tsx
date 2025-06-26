@@ -35,7 +35,7 @@ const formatDuration = (seconds: number): string => {
   const hours = Math.floor(roundedSeconds / 3600);
   const minutes = Math.floor((roundedSeconds % 3600) / 60);
   const remainingSeconds = roundedSeconds % 60;
-  
+
   if (hours > 0) {
     return `${hours}h ${minutes}m ${remainingSeconds}s`;
   } else if (minutes > 0) {
@@ -52,6 +52,9 @@ export default function RoutingControls({ resourceLocation, userLocation, onClos
 
   const [error, setError] = useState<string | null>(null);
 
+  // Recalculate route whenever mode or locations change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     calculateRoute();
   }, [selectedMode, userLocation, resourceLocation]);
@@ -61,6 +64,7 @@ export default function RoutingControls({ resourceLocation, userLocation, onClos
     if (['bus', 'scooter', 'uber', 'lyft', 'mdo'].includes(selectedMode)) {
       return;
     }
+
     
     if (!userLocation?.lat || !userLocation?.lng || !resourceLocation.lat || !resourceLocation.lng) return;
 
@@ -79,7 +83,7 @@ export default function RoutingControls({ resourceLocation, userLocation, onClos
 
       const data = await response.json();
       console.log('API Response:', data);
-      
+
       if (!response.ok) {
         console.error('API Error Response:', {
           status: response.status,
@@ -112,15 +116,15 @@ export default function RoutingControls({ resourceLocation, userLocation, onClos
           console.warn('Invalid coordinate format:', coord);
           return null;
         }
-        
+
         const lng = coord[0];
         const lat = coord[1];
-        
+
         if (typeof lng !== 'number' || typeof lat !== 'number') {
           console.warn('Invalid coordinate values:', coord);
           return null;
         }
-        
+
         return [lng, lat];
       }).filter(Boolean) as [number, number][];
 
@@ -129,7 +133,7 @@ export default function RoutingControls({ resourceLocation, userLocation, onClos
       }
 
       console.log('Formatted coordinates:', formattedCoordinates);
-      
+
       // Update route data state
       setRouteData({
         features: data.features,
