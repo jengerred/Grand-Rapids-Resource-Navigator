@@ -24,6 +24,7 @@
     "mongodb": "^6.17.0",
     "next": "15.3.2",
     "openrouteservice": "^0.1.2",
+    "python-shell": "^5.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-i18next": "^15.5.3",

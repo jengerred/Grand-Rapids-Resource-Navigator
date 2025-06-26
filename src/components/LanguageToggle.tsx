@@ -2,11 +2,14 @@
 
 import { useState } from 'react';
 
-export function LanguageToggle() {
-  const [isSpanish, setIsSpanish] = useState(false);
+interface LanguageToggleProps {
+  isSpanish: boolean;
+  onToggle: (isSpanish: boolean) => void;
+}
 
+export function LanguageToggle({ isSpanish, onToggle }: LanguageToggleProps) {
   const toggleLanguage = () => {
-    setIsSpanish(!isSpanish);
+    onToggle(!isSpanish);
   };
 
   return (
@@ -14,16 +17,16 @@ export function LanguageToggle() {
       <button
         onClick={toggleLanguage}
         className={`px-4 py-2 rounded-lg transition-colors ${
-          !isSpanish ? 'bg-blue-500 text-white hover:bg-blue-600 hover:text-white' : 'bg-gray-200 text-gray-600'
-        } hover:bg-green-500 hover:text-white`}
+          !isSpanish ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'
+        } hover:bg-blue-600 hover:text-white`}
       >
         English
       </button>
       <button
         onClick={toggleLanguage}
         className={`px-4 py-2 rounded-lg transition-colors ${
-          isSpanish ? 'bg-blue-500 text-white hover:bg-blue-600 hover:text-white' : 'bg-gray-200 text-gray-600'
-        } hover:bg-green-500 hover:text-white`}
+          isSpanish ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'
+        } hover:bg-blue-600 hover:text-white`}
       >
         Español
       </button>

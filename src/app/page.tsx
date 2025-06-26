@@ -9,6 +9,7 @@ import { Resource } from '@/types/resource';
 export default function Home() {
   const [resources, setResources] = useState<Resource[]>([]);
   const [showRouting, setShowRouting] = useState(false);
+  const [isSpanish, setIsSpanish] = useState(false); // Add language state
 
   useEffect(() => {
     const fetchResources = async () => {
@@ -44,7 +45,10 @@ export default function Home() {
             </div>
             <div className="mt-4">
               <div className="max-w-fit mx-auto">
-                <LanguageToggle />
+                <LanguageToggle 
+                  isSpanish={isSpanish}
+                  onToggle={(newIsSpanish) => setIsSpanish(newIsSpanish)}
+                />
               </div>
             </div>
           </div>
@@ -67,7 +71,7 @@ export default function Home() {
           </div>
         </div>
       </div>
-      <ChatBot />
+      <ChatBot isSpanish={isSpanish} />
     </div>
   );
 }

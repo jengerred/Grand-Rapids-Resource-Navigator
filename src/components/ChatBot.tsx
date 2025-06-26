@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface Message {
   text: string;
@@ -8,36 +8,106 @@ interface Message {
   isSpanish: boolean;
 }
 
-export function ChatBot() {
+interface ChatBotProps {
+  isSpanish: boolean;
+}
+
+export function ChatBot({ isSpanish: appSpanish }: ChatBotProps) {
+  const [isSpanish, setIsSpanish] = useState(appSpanish); // Start with app-wide language but maintain separate state
   const [messages, setMessages] = useState<Message[]>([
     {
-      text: '¿Cómo puedo ayudarte hoy? Puedes preguntar cosas como "¿Dónde puedo encontrar pañales gratuitos?"',
+      text: appSpanish 
+        ? '¿Cómo puedo ayudarte hoy? Puedes hacer preguntas como "¿Dónde puedo encontrar pañales gratuitos?"'
+        : 'How can I help you today? You can ask questions like "Where can I find free diapers?"',
       isUser: false,
-      isSpanish: true
-    },
-    {
-      text: 'How can I help you today? You can ask questions like "Where can I find free diapers?"',
-      isUser: false,
-      isSpanish: false
+      isSpanish: appSpanish
     }
   ]);
   const [input, setInput] = useState('');
-  const [isSpanish, setIsSpanish] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Update messages when language changes
+  const updateMessages = (newIsSpanish: boolean) => {
+    setMessages([{
+      text: newIsSpanish 
+        ? '¿Cómo puedo ayudarte hoy? Puedes hacer preguntas como "¿Dónde puedo encontrar pañales gratuitos?"'
+        : 'How can I help you today? You can ask questions like "Where can I find free diapers?"',
+      isUser: false,
+      isSpanish: newIsSpanish
+    }]);
+  };
+
+  // Update messages when language changes (either from app or local state)
+  useEffect(() => {
+    // Update both local state and messages when appSpanish changes
+    setIsSpanish(appSpanish);
+    updateMessages(appSpanish);
+  }, [appSpanish]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
 
-    setMessages(prev => [...prev, { text: input, isUser: true, isSpanish }]);
-    setInput('');
+    const userMessage = {
+      text: isSpanish 
+        ? input // If Spanish, send as is
+        : input, // For now, send English as is - we'll add translation later
+      isUser: true,
+      isSpanish: isSpanish
+    };
 
-    // Simulate AI response
-    setTimeout(() => {
-      const response = isSpanish 
-        ? '¡Hola! ¿Cómo puedo ayudarte hoy?'
-        : 'Hello! How can I assist you today?';
-      setMessages(prev => [...prev, { text: response, isUser: false, isSpanish }]);
-    }, 1000);
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    setIsLoading(true);
+
+    
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: userMessage.text,
+          isSpanish: isSpanish
+        })
+      });
+    
+      console.log('API Response status:', response.status);
+      console.log('API Response headers:', response.headers);
+
+      const data = await response.json();
+      console.log('API Response data:', data);
+      
+      if (data.error) {
+        console.error('API Error:', data.error, 'Details:', data.details);
+        setMessages(prev => [...prev, { 
+          text: isSpanish 
+            ? `Lo siento, hubo un error procesando su solicitud. ${data.details ? `Detalles: ${data.details}` : ''}`
+            : `Sorry, there was an error processing your request. ${data.details ? `Details: ${data.details}` : ''}`,
+          isUser: false,
+          isSpanish: isSpanish
+        }]);
+        return;
+      }
+      
+      const botResponse = {
+        text: data.response,
+        isUser: false,
+        isSpanish: isSpanish
+      };
+      
+      setMessages(prev => [...prev, botResponse]);
+    } catch (error) {
+      console.error('Error processing response:', error);
+      setMessages(prev => [...prev, { 
+        text: isSpanish 
+          ? 'Lo siento, hubo un error procesando su solicitud. Por favor, inténtelo de nuevo.'
+          : 'Sorry, there was an error processing your request. Please try again.',
+        isUser: false,
+        isSpanish: isSpanish
+      }]);
+    }
   };
 
   return (
@@ -82,7 +152,7 @@ export function ChatBot() {
           </button>
         </form>
 
-        {/* Language Toggle */}
+
         <div className="mt-4 flex justify-center gap-2">
           <button
             onClick={() => setIsSpanish(false)}
