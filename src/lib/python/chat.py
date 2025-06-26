@@ -27,6 +27,10 @@ def get_response(message: str, is_spanish: bool) -> dict:
         }
 
     try:
+        # Get environment variables
+        ollama_url = os.getenv('OLLAMA_API_URL', 'http://localhost:11434')
+        model_name = os.getenv('OLLAMA_MODEL', 'llama3.2')
+        
         # Prepare the system prompt based on language
         system_prompt = (
             "You are a helpful assistant that helps people find local resources in Grand Rapids.\n"
@@ -41,9 +45,9 @@ def get_response(message: str, is_spanish: bool) -> dict:
 
         # Make API call to Ollama
         response = requests.post(
-            "http://localhost:11434/api/generate",
+            f"{ollama_url}/api/generate",
             json={
-                "model": "llama3.2",
+                "model": model_name,
                 "prompt": prompt,
                 "stream": False
             }

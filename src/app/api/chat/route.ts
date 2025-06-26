@@ -82,7 +82,7 @@ export async function POST(request: Request) {
     try {
       console.log('=== START OF PYTHON SCRIPT EXECUTION ===');
       const pythonPath = process.env.PYTHON_PATH || 'python3';
-      const scriptPath = process.cwd() + '/src/lib/python/chat.py';
+      const scriptPath = process.env.PYTHON_SCRIPT_PATH || process.cwd() + '/src/lib/python/chat.py';
       
       console.log('Script path:', scriptPath);
       console.log('Environment variables:', {
