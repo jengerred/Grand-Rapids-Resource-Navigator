@@ -3,11 +3,13 @@ import { spawn } from 'child_process';
 import { promisify } from 'util';
 import { type ChildProcess, exec as childExec } from 'child_process';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface ChatRequest {
   message: string;
   isSpanish: boolean;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface ChatResponse {
   response: string;
   error?: string;
@@ -22,6 +24,7 @@ const rateLimit = {
 // In-memory cache for responses
 const responseCache = new Map<string, string>();
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const exec = promisify(childExec) as (command: string, options?: { env?: NodeJS.ProcessEnv }) => Promise<{ stdout: string; stderr: string; }>; // Properly typed promisified exec
 
 export async function POST(request: Request) {

@@ -24,6 +24,7 @@ export function ChatBot({ isSpanish: appSpanish }: ChatBotProps) {
     }
   ]);
   const [input, setInput] = useState('');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isLoading, setIsLoading] = useState(false);
 
   // Update messages when language changes
