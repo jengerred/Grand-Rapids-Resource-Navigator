@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { TRANSPORT_MODES } from '@/lib/routing/transportModes';
-import { generateRideShareUrl } from '@/lib/routing';
+import { generateRideShareUrl, generateLimeUrl, generateMDOUrl } from '@/lib/routing';
 import { ClientOnly } from '@/components/map/ClientOnly';
 import { useLanguageStore } from '@/lib/store';
 import { appTranslations } from '@/lib/appTranslations';
@@ -187,62 +187,70 @@ export default function RoutingControls({ resourceLocation, userLocation, onClos
                   if (key === 'bus') {
                     setSelectedMode(key as keyof typeof TRANSPORT_MODES);
                     
-                    function isMobileDevice() {
-                      return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-                    }
-
-                    if (isMobileDevice()) {
-                      const message = isSpanish
-                        ? 'Las direcciones de autobús con navegación en tiempo real están disponibles en la aplicación Transit. Si no la tiene instalada, será redirigido para descargarla. ¿Desea continuar a la aplicación Transit?'
-                        : 'Bus directions with real-time navigation are available in the Transit app. If you don\'t have it installed, you\'ll be redirected to download it. Would you like to continue to the Transit app?';
+                    // Show appropriate message based on device
+                    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                    const message = isMobile
+                      ? isSpanish
+                        ? 'Las direcciones de autobús con navegación en tiempo real están disponibles en la aplicación Transit. Si no la tiene instalada, será redirigido para descargarla.'
+                        : 'Bus directions with real-time navigation are available in the Transit app. If you don\'t have it installed, you\'ll be redirected to download it.'
+                      : isSpanish
+                        ? 'Las direcciones de autobús con navegación en tiempo real solo están disponibles en la aplicación móvil Transit.\n\nEscanee el código QR para descargar la aplicación en su teléfono.'
+                        : 'Bus directions with real-time navigation are only available in the Transit mobile app.\n\nScan the QR code to download the app to your phone.';
+                    
+                    if (window.confirm(message)) {
+                      // Check if mobile
+                      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
                       
-                      if (window.confirm(message)) {
-                        const start = userLocation;
-                        const end = resourceLocation;
-                        // Use a hidden iframe to handle the URL without showing a browser prompt
-                        const iframe = document.createElement('iframe');
-                        iframe.style.display = 'none';
-                        document.body.appendChild(iframe);
+                      if (isMobile) {
+                        // On mobile, try to open the app directly with fallback to app store
+                        const appUrl = `transit://directions?from=${userLocation.lat},${userLocation.lng}&to=${resourceLocation.lat},${resourceLocation.lng}`;
+                        const appStoreUrl = /iPhone|iPad|iPod/i.test(navigator.userAgent)
+                          ? 'https://apps.apple.com/app/transit-bus-train-times/id498151501'
+                          : 'https://play.google.com/store/apps/details?id=com.thetransitapp.droid';
                         
-                        // First try to open the Transit app
-                        const transitUrl = `transit://directions?from=${start.lat},${start.lng}&to=${end.lat},${end.lng}`;
-                        iframe.src = transitUrl;
-                        
-                        // Fallback to app store after a delay if the app isn't installed
-                        let appOpened = false;
-                        window.onblur = () => {
-                          appOpened = true;
-                        };
-                        
+                        // Try to open the app, fall back to app store if it fails after 1 second
+                        window.location.href = appUrl;
                         setTimeout(() => {
-                          if (!appOpened && !document.hidden) {
-                            const appStoreLink = /iPhone|iPad|iPod/i.test(navigator.userAgent)
-                              ? 'https://apps.apple.com/app/transit-navigation-app/id498151501'
-                              : 'https://play.google.com/store/apps/details?id=com.thetransitapp.droid';
-                            window.open(appStoreLink, '_blank', 'noopener,noreferrer');
+                          // Only redirect if still on the current page
+                          if (!document.hidden) {
+                            window.location.href = appStoreUrl;
                           }
-                          // Clean up the iframe
-                          document.body.removeChild(iframe);
-                        }, 3000);
+                        }, 1000);
+                      } else {
+                        // On desktop, open the download page
+                        window.open('https://transitapp.com/en/region/grand-rapids#download', '_blank', 'noopener,noreferrer');
                       }
-                    } else {
-                      // Show a message for desktop users
-                      alert(isSpanish
-                        ? 'Las direcciones de autobús con navegación en tiempo real están disponibles en la aplicación Transit. Por favor, use su teléfono o tableta para acceder a esta función.'
-                        : 'Bus directions with real-time navigation are available in the Transit app. Please use your phone or tablet to access this feature.'
-                      );
                     }
                     return;
                   }
                   
                   if (key === 'scooter') {
                     setSelectedMode(key as keyof typeof TRANSPORT_MODES);
+                    const userAgent = navigator.userAgent;
+                    const isIOS = /iPhone|iPad|iPod/i.test(userAgent);
+                    const isAndroid = /Android/i.test(userAgent);
+                    const isMobile = isIOS || isAndroid;
+                    const limeUrls = generateLimeUrl();
+                    
+                    const storeName = isIOS ? 'App Store' : 'Play Store';
                     const message = isSpanish
-                      ? '¿Abrir en "Lime"?'
-                      : 'Open in "Lime"?';
+                      ? `¿Abrir ${storeName} para acceder a Lime?`
+                      : `Open the ${storeName} to access Lime?`;
                     
                     if (window.confirm(message)) {
-                      window.open('https://www.li.me', '_blank', 'noopener,noreferrer');
+                      if (isMobile) {
+                        // Redirect directly to the appropriate app store
+                        if (isIOS) {
+                          window.location.href = limeUrls.appStoreUrl;
+                        } else if (isAndroid) {
+                          window.location.href = limeUrls.playStoreUrl;
+                        } else {
+                          window.location.href = limeUrls.webUrl;
+                        }
+                      } else {
+                        // On desktop, open the website
+                        window.open(limeUrls.webUrl, '_blank', 'noopener,noreferrer');
+                      }
                     }
                     return;
                   }
@@ -279,7 +287,32 @@ export default function RoutingControls({ resourceLocation, userLocation, onClos
                   }
                   if (key === 'mdo') {
                     setSelectedMode(key as keyof typeof TRANSPORT_MODES);
-                    window.open('https://www.mdorides.com', '_blank', 'noopener,noreferrer');
+                    const userAgent = navigator.userAgent;
+                    const isIOS = /iPhone|iPad|iPod/i.test(userAgent);
+                    const isAndroid = /Android/i.test(userAgent);
+                    const isMobile = isIOS || isAndroid;
+                    const mdoUrls = generateMDOUrl();
+                    
+                    const storeName = isIOS ? 'App Store' : 'Play Store';
+                    const message = isSpanish
+                      ? `¿Abrir ${storeName} para acceder a MDO Carshare?`
+                      : `Open the ${storeName} to access MDO Carshare?`;
+                    
+                    if (window.confirm(message)) {
+                      if (isMobile) {
+                        // Redirect directly to the appropriate app store
+                        if (isIOS) {
+                          window.location.href = mdoUrls.appStoreUrl;
+                        } else if (isAndroid) {
+                          window.location.href = mdoUrls.playStoreUrl;
+                        } else {
+                          window.location.href = mdoUrls.webUrl;
+                        }
+                      } else {
+                        // On desktop, open the website
+                        window.open(mdoUrls.webUrl, '_blank', 'noopener,noreferrer');
+                      }
+                    }
                     return;
                   }
 

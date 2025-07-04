@@ -96,22 +96,28 @@ interface LocationWithAddress {
 
 export function generateRideShareUrl(mode: keyof typeof TRANSPORT_MODES, start: { lat: number; lng: number }, end: LocationWithAddress): string {
   if (mode === 'uber') {
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    
-    if (isMobile) {
-      // Mobile deep link format - opens the Uber app
-      return `uber://?action=setPickup&pickup[latitude]=${start.lat}&pickup[longitude]=${start.lng}&dropoff[latitude]=${end.lat}&dropoff[longitude]=${end.lng}`;
-    } else {
-      // Desktop web format - just open the main Uber page
-      return 'https://m.uber.com';
-    }
+    // Use web URL which will handle app opening if available
+    return `https://m.uber.com/ul/?action=setPickup&pickup[latitude]=${start.lat}&pickup[longitude]=${start.lng}&dropoff[latitude]=${end.lat}&dropoff[longitude]=${end.lng}`;
   } else if (mode === 'lyft') {
     return `https://lyft.com/ride/?id=lyft&partner=YOUR_CLIENT_ID&pickup[latitude]=${start.lat}&pickup[longitude]=${start.lng}&destination[latitude]=${end.lat}&destination[longitude]=${end.lng}`;
   }
   return '';
 }
 
-// Generate MDO carshare URL
-export function generateMDOUrl(start: { lat: number; lng: number }, end: { lat: number; lng: number }): string {
-  return `https://mdo-carshare.com/reserve?startLat=${start.lat}&startLng=${start.lng}&endLat=${end.lat}&endLng=${end.lng}`;
+// Generate MDO Carshare URL with platform-specific options
+export function generateMDOUrl() {
+  return {
+    webUrl: 'https://mdocarshare.org',
+    appStoreUrl: 'https://apps.apple.com/us/app/mdo-carshare/id1458762596',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.goodtravelsoftware.sharecar.mobilitydevelopment&hl=en_US'
+  };
+}
+
+// Generate Lime URL with platform-specific options
+export function generateLimeUrl() {
+  return {
+    webUrl: 'https://www.li.me',
+    appStoreUrl: 'https://apps.apple.com/us/app/lime-bike-scooter-ride/id1199780189',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.limebike'
+  };
 }
