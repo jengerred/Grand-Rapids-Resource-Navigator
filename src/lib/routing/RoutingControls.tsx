@@ -199,10 +199,14 @@ export default function RoutingControls({ resourceLocation, userLocation, onClos
                       if (window.confirm(message)) {
                         const start = userLocation;
                         const end = resourceLocation;
-                        const transitUrl = `transit://directions?from=${start.lat},${start.lng}&to=${end.lat},${end.lng}`;
+                        // Use a hidden iframe to handle the URL without showing a browser prompt
+                        const iframe = document.createElement('iframe');
+                        iframe.style.display = 'none';
+                        document.body.appendChild(iframe);
                         
-                        // Try to open the app directly
-                        window.location.href = transitUrl;
+                        // First try to open the Transit app
+                        const transitUrl = `transit://directions?from=${start.lat},${start.lng}&to=${end.lat},${end.lng}`;
+                        iframe.src = transitUrl;
                         
                         // Fallback to app store after a delay if the app isn't installed
                         let appOpened = false;
@@ -215,9 +219,11 @@ export default function RoutingControls({ resourceLocation, userLocation, onClos
                             const appStoreLink = /iPhone|iPad|iPod/i.test(navigator.userAgent)
                               ? 'https://apps.apple.com/app/transit-navigation-app/id498151501'
                               : 'https://play.google.com/store/apps/details?id=com.thetransitapp.droid';
-                            window.location.href = appStoreLink;
+                            window.open(appStoreLink, '_blank', 'noopener,noreferrer');
                           }
-                        }, 3000); // Increased from 1000ms to 3000ms to ensure the app has time to open
+                          // Clean up the iframe
+                          document.body.removeChild(iframe);
+                        }, 3000);
                       }
                     } else {
                       // Show a message for desktop users
@@ -228,17 +234,22 @@ export default function RoutingControls({ resourceLocation, userLocation, onClos
                     }
                     return;
                   }
+                  
                   if (key === 'scooter') {
                     setSelectedMode(key as keyof typeof TRANSPORT_MODES);
-                    window.open('https://www.li.me', '_blank', 'noopener,noreferrer');
+                    const message = isSpanish
+                      ? '¿Abrir en "Lime"?'
+                      : 'Open in "Lime"?';
+                    
+                    if (window.confirm(message)) {
+                      window.open('https://www.li.me', '_blank', 'noopener,noreferrer');
+                    }
                     return;
                   }
+                  
                   if (key === 'uber') {
                     setSelectedMode(key as keyof typeof TRANSPORT_MODES);
-                    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                    const uberUrl = isMobile
-                      ? `uber://?action=setPickup&pickup[latitude]=${userLocation.lat}&pickup[longitude]=${userLocation.lng}&dropoff[latitude]=${resourceLocation.lat}&dropoff[longitude]=${resourceLocation.lng}`
-                      : 'https://m.uber.com';
+                    const uberUrl = generateRideShareUrl('uber', userLocation, resourceLocation);
                     
                     // Show confirmation message before opening Uber
                     const message = isSpanish
@@ -246,8 +257,7 @@ export default function RoutingControls({ resourceLocation, userLocation, onClos
                       : 'Open in "Uber"?';
                     
                     if (window.confirm(message)) {
-                      // Open in a new tab for both mobile and desktop
-                      // This prevents the default browser dialog
+                      // Open in a new tab to prevent default browser dialogs
                       window.open(uberUrl, '_blank', 'noopener,noreferrer');
                     }
                     return;
