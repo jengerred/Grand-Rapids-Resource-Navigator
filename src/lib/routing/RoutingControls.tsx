@@ -189,13 +189,11 @@ export default function RoutingControls({ resourceLocation, userLocation, onClos
                     
                     // Show appropriate message based on device
                     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                    const message = isMobile
-                      ? isSpanish
-                        ? 'Las direcciones de autobús con navegación en tiempo real están disponibles en la aplicación Transit. Si no la tiene instalada, será redirigido para descargarla.'
-                        : 'Bus directions with real-time navigation are available in the Transit app. If you don\'t have it installed, you\'ll be redirected to download it.'
-                      : isSpanish
-                        ? 'Las direcciones de autobús con navegación en tiempo real solo están disponibles en la aplicación móvil Transit.\n\nEscanee el código QR para descargar la aplicación en su teléfono.'
-                        : 'Bus directions with real-time navigation are only available in the Transit mobile app.\n\nScan the QR code to download the app to your phone.';
+                    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+                    const storeName = isIOS ? 'App Store' : 'Play Store';
+                    const message = isSpanish
+                      ? `Las direcciones de autobús con navegación en tiempo real están disponibles en la aplicación Transit. ¿Abrir ${storeName}?`
+                      : `Bus directions with real-time navigation are available in the Transit app. Open in ${storeName}?`;
                     
                     if (window.confirm(message)) {
                       // Check if mobile
@@ -217,8 +215,11 @@ export default function RoutingControls({ resourceLocation, userLocation, onClos
                           }
                         }, 1000);
                       } else {
-                        // On desktop, open the download page
-                        window.open('https://transitapp.com/en/region/grand-rapids#download', '_blank', 'noopener,noreferrer');
+                        // On desktop, open the appropriate app store
+                        const appStoreUrl = /iPhone|iPad|iPod/i.test(navigator.userAgent)
+                          ? 'https://apps.apple.com/app/transit-bus-train-times/id498151501'
+                          : 'https://play.google.com/store/apps/details?id=com.thetransitapp.droid';
+                        window.location.href = appStoreUrl;
                       }
                     }
                     return;
