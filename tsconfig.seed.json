@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "outDir": "./dist-seed",
+    "rootDir": "."
+  },
+  "include": ["scripts/seed.ts"],
+  "exclude": ["node_modules"]
+}

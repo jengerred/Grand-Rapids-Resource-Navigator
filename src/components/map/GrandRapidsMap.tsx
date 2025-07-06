@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { LocateIcon } from 'lucide-react';
 import { LocationPermissionPrompt } from '@/components/map/LocationPermissionPrompt';
 import { useLanguageStore } from '@/lib/store';
 import { getTranslation } from '@/lib/appTranslations';
@@ -56,6 +57,8 @@ export default function GrandRapidsMap({
   const [hasLocationPermission, setHasLocationPermission] = useState(false);
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
   const [route, setRoute] = useState<Route | null>(null);
+  const [showLocationPrompt, setShowLocationPrompt] = useState(false);
+  const [showFloatingIcon, setShowFloatingIcon] = useState(true);
 
 
   useEffect(() => {
@@ -105,6 +108,7 @@ export default function GrandRapidsMap({
 
   const handlePermissionDenied = () => {
     setHasLocationPermission(false);
+    setShowLocationPrompt(false);
   };
 
   const mapRef = useRef<HTMLDivElement>(null);
@@ -129,16 +133,35 @@ export default function GrandRapidsMap({
   return (
     <ClientOnly>
       <div className={`relative w-full ${className}`}>
+        {/* Floating location icon */}
+        {showFloatingIcon && (
+          <button 
+            onClick={() => setShowLocationPrompt(true)}
+            className="fixed top-4 left-4 z-[1000] w-10 h-10 bg-blue-500 rounded-full shadow-lg flex items-center justify-center hover:bg-blue-600 transition-colors"
+            aria-label="Show location prompt"
+          >
+            <LocateIcon className="w-5 h-5 text-white" />
+          </button>
+        )}
+
         <LocationPermissionPrompt
-          onPermissionGranted={() => setHasLocationPermission(true)}
-          onPermissionDenied={handlePermissionDenied}
+          isOpen={showLocationPrompt}
+          isSharing={hasLocationPermission}
+          onPermissionGranted={() => {
+            setHasLocationPermission(true);
+            setShowFloatingIcon(false);
+          }}
+          onPermissionRevoked={() => {
+            setHasLocationPermission(false);
+            setShowFloatingIcon(true);
+          }}
+          onClose={() => {
+            setShowLocationPrompt(false);
+            setShowFloatingIcon(true);
+          }}
         />
         <div className="flex flex-col gap-4">
-          <div id="map-container" className="map-container" style={{ 
-            height: '600px',
-            position: 'relative',
-            top: '0'
-          }} ref={mapRef}>
+          <div id="map-container" className="map-container" ref={mapRef}>
             <LeafletConfig />
             <MapContainer
               center={[42.9634, -85.6681]}
@@ -301,8 +324,7 @@ export default function GrandRapidsMap({
                           <button 
                             onClick={(e) => {
                               if (!userLocation) {
-                                // Show a message to share location
-                                alert('To get directions, please share your location');
+                                setShowLocationPrompt(true);
                                 return;
                               }
                               

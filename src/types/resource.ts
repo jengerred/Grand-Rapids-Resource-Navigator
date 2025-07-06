@@ -17,6 +17,7 @@ export interface Resource {
   location?: string;
   createdAt?: Date;
   updatedAt?: Date;
+  details?: string;
 }
 
 export interface CreateResourceDTO {

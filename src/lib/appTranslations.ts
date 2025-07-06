@@ -59,6 +59,7 @@ interface LanguageTranslations {
   description: string;
   shareLocation: string;
   share: string;
+  stopSharing: string;
   notNow: string;
   offlineResources: string;
   map: {
@@ -96,7 +97,7 @@ export function getRoutingTranslation(key: keyof RoutingTranslations, lang: 'en'
 
 export const appTranslations: { [key: string]: LanguageTranslations } = {
   en: {
-    welcome: 'Welcome to the Food Pantry Navigator',
+    welcome: 'Grand Rapids Resource Navigator',
     search: 'Search',
     resources: 'Resources',
     language: 'Language',
@@ -105,8 +106,9 @@ export const appTranslations: { [key: string]: LanguageTranslations } = {
     searchPlaceholder: 'Search for resources...',
     languageToggle: 'Toggle Language',
     description: 'Find resources and plan your route in Grand Rapids',
-    shareLocation: 'Share your location to find nearby resources',
+    shareLocation: 'Share your location to get directions to nearby resources',
     share: 'Share',
+    stopSharing: 'Stop Sharing',
     notNow: 'Close',
     offlineResources: 'View offline resources',
     map: {
@@ -164,7 +166,7 @@ export const appTranslations: { [key: string]: LanguageTranslations } = {
     }
   },
   es: {
-    welcome: 'Bienvenido al Navegador de Bancos de Alimentos',
+    welcome: 'Navegador de Recursos de Grand Rapids',
     search: 'Buscar',
     resources: 'Recursos',
     language: 'Idioma',
@@ -173,8 +175,9 @@ export const appTranslations: { [key: string]: LanguageTranslations } = {
     searchPlaceholder: 'Buscar recursos...',
     languageToggle: 'Cambiar Idioma',
     description: 'Encuentra recursos y planifica tu ruta en Grand Rapids',
-    shareLocation: 'Comparte tu ubicación para encontrar recursos cercanos',
+    shareLocation: 'Comparte tu ubicación para obtener direcciones a recursos cercanos',
     share: 'Compartir',
+    stopSharing: 'Dejar de compartir',
     notNow: 'Cerrar',
     offlineResources: 'Ver recursos sin conexión',
     map: {
