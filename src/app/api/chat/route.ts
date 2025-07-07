@@ -196,10 +196,21 @@ async function generateResponse(question: string, resources: Resource[], languag
   // Limit to 5 resources for better readability
   const resourcesToShow = matchedResources.slice(0, 5);
   
-  // Format resources into a clean list
+  // Format resources as minified HTML cards with small emojis
   const resourceList = resourcesToShow.map(resource => {
-    return `• ${resource.name}\n  📍 ${resource.address}, ${resource.city}\n  📞 ${resource.phone || 'Phone not available'}\n  ${resource.website ? `🌐 ${resource.website}` : ''}`;
-  }).join('\n\n');
+    let html = `<div class="resource-card"><h4>${resource.name}</h4>`;
+    html += `<div class="resource-line"><span class="emoji">📍</span> ${resource.address}, ${resource.city}</div>`;
+    if (resource.phone) {
+      html += `<div class="resource-line"><span class="emoji">📞</span> <a href="tel:${resource.phone}">${resource.phone}</a></div>`;
+    }
+    if (resource.website) {
+      const url = resource.website.startsWith('http') ? resource.website : 'https://' + resource.website;
+      const displayUrl = resource.website.replace(/^https?:\/\//, '');
+      html += `<div class="resource-line"><span class="emoji">🌐</span> <a href="${url}" target="_blank">${displayUrl}</a></div>`;
+    }
+    html += '</div>';
+    return html;
+  }).join('');
   
   // Custom responses for specific needs
   let response = '';
@@ -226,12 +237,12 @@ async function generateResponse(question: string, resources: Resource[], languag
     response = getTranslatedText('response.default', language);
   }
   
-  // Format the response with proper spacing and structure
+  // Format the response with minimal spacing between sections
   const sections: string[] = [response];
   
   // Add resources if available
   if (resourceList) {
-    sections.push('', resourceList); // Add empty line before resources
+    sections.push(resourceList);
   }
   
   // Add directions prompt if we have resources
@@ -240,16 +251,19 @@ async function generateResponse(question: string, resources: Resource[], languag
       ? getTranslatedText('response.directions.single', language, { resourceName: resources[0].name })
       : getTranslatedText('response.directions.multiple', language);
     
-    sections.push('', directionsPrompt); // Add empty line before directions
+    sections.push(directionsPrompt);
+    
+    // Add follow-up question with an extra newline before it
+    if (followUp) {
+      sections.push('', followUp);
+    }
+  } else if (followUp) {
+    // If no directions but we have a follow-up, add it directly
+    sections.push(followUp);
   }
   
-  // Add follow-up question
-  if (followUp) {
-    sections.push('', followUp); // Add empty line before follow-up
-  }
-  
-  // Join all sections with double newlines for better spacing
-  return sections.join('\n\n');
+  // Join all sections with a single newline for compact spacing
+  return sections.join('\n');
 }
 
 // Helper function to format resources into context
@@ -277,19 +291,46 @@ function createContextFromResources(resources: Resource[], language: string = 'e
     context += `- ${service}: ${providers.join(', ')}\n`;
   });
 
-  // Add detailed resource information
-  context += '\nDETAILED RESOURCE INFORMATION:\n';
-  
-  resources.forEach(resource => {
-    context += `\nRESOURCE: ${resource.name}\n`;
-    context += `Location: ${resource.address}, ${resource.city}\n`;
-    if (resource.phone) context += `Phone: ${resource.phone}\n`;
-    if (resource.website) context += `Website: ${resource.website}\n`;
-    if (resource.details) context += `Details: ${resource.details}\n`;
-    context += `Services: ${resource.services?.join(', ') || 'Various services'}\n`;
-  });
+  // Format each resource with HTML for card-like display
+  const formatResourceCard = (resource: Resource) => {
+    return `
+<div class="resource-card bg-white border border-gray-200 rounded-lg p-3 my-2 shadow-sm">
+  <h4 class="font-medium text-sm">${resource.name}</h4>
+  <div class="text-xs text-gray-600 mt-1">
+    <div class="flex items-start mb-1">
+      <span class="mr-2">📍</span>
+      <span>${resource.address}, ${resource.city}</span>
+    </div>
+    ${resource.phone ? `
+    <div class="flex items-center mb-1">
+      <span class="mr-2">📞</span>
+      <a href="tel:${resource.phone}" class="text-blue-600 hover:underline">${resource.phone}</a>
+    </div>` : ''}
+    ${resource.website ? `
+    <div class="flex items-center mb-1">
+      <span class="mr-2">🌐</span>
+      <a href="${resource.website.startsWith('http') ? resource.website : 'https://' + resource.website}" 
+         target="_blank" 
+         rel="noopener noreferrer" 
+         class="text-blue-600 hover:underline break-all">
+        ${resource.website.replace(/^https?:\/\//, '')}
+      </a>
+    </div>` : ''}
+    ${resource.services && resource.services.length > 0 ? `
+    <div class="mt-2 flex flex-wrap gap-1">
+      ${resource.services.slice(0, 3).map(service => 
+        `<span class="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded">${service}</span>`
+      ).join('\n      ')}
+    </div>` : ''}
+  </div>
+</div>`;
+  };
 
-  return context;
+  // Format resources as cards
+  const formattedResources = resources.map(resource => formatResourceCard(resource)).join('');
+  
+  // Return just the formatted resources without the context
+  return formattedResources;
 }
 
 // Helper function to get translation with proper typing and fallback

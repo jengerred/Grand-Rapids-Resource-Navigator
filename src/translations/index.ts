@@ -29,7 +29,7 @@ export const translations: Translations = {
     
     // Resource type responses
     'response.baby': 'Baby food, diapers, and baby supplies can be expensive - you\'re in luck! Here are some Grand Rapids resources that offer assistance with baby items:',
-    'response.food': 'I found these food resources in Grand Rapids that might help you and your family:',
+    'response.food': 'I understand how challenging it can be to put food on the table. I\'m here to help.\n\nI found these food resources in Grand Rapids that might help you and your family:',
     'response.shelter': 'Here are some shelter and housing resources in Grand Rapids that might be able to assist you:',
     'response.clothing': 'Here are some places in Grand Rapids where you can find clothing assistance:',
     'response.medical': 'I found these medical resources in the Grand Rapids area that might be helpful:',
