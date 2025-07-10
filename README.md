@@ -24,6 +24,7 @@ A web application built to help low-income residents of Grand Rapids, MI, discov
 
 - **Frontend:** React.js
 - **Mapping & Routing:** Leaflet.js and Mapbox
+- **Database:** MongoDB
 - **AI Chatbot:** Custom-built using modern NLP techniques
 - **Deployment:** Vercel
 
